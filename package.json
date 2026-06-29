@@ -1,0 +1,8 @@
+{
+  "name": "rotation-board",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ruby -run -e httpd app -p 4173"
+  }
+}

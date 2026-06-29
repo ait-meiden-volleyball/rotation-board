@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rotation Board Ver1</title>
+    <link rel="stylesheet" href="./styles.css?v=20260625-14" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <nav class="global-tabs" aria-label="screen navigation">
+        <button id="tabSetup" class="tab-button active" type="button">入力画面</button>
+        <button id="tabAnalysis" class="tab-button" type="button">
+          <span class="tab-label-setup">ローテーション<br />画面</span>
+          <span class="tab-label-analysis">ローテーション画面</span>
+        </button>
+      </nav>
+
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Volleyball GM Tool</p>
+          <h1>ROTATION BOARD <span>Ver1</span></h1>
+        </div>
+      </header>
+
+      <main>
+        <section id="setupScreen" class="screen active" aria-labelledby="setupTitle">
+          <div class="screen-title">
+            <div>
+              <p class="eyebrow">Pre-match Setup</p>
+              <h2 id="setupTitle">MATCH SETUP</h2>
+            </div>
+            <p>Register roster, choose starters, then build the start rotation.</p>
+          </div>
+
+          <div class="setup-grid">
+            <section class="panel team-panel compact-team-panel">
+              <div class="panel-header">
+                <h3>TEAMS</h3>
+                <span>optional</span>
+              </div>
+              <div class="team-name-row">
+                <label>
+                  <span>HOME TEAM</span>
+                  <input id="homeTeamName" class="text-input" type="text" value="名電" placeholder="HOME TEAM" />
+                </label>
+                <label>
+                  <span>AWAY TEAM</span>
+                  <input id="opponentTeamName" class="text-input" type="text" value="星城" placeholder="AWAY TEAM" />
+                </label>
+              </div>
+            </section>
+
+            <section class="panel home-panel">
+              <div class="panel-header">
+                <h3>HOME TEAM</h3>
+                <span>max 12</span>
+              </div>
+              <div class="roster-grid" id="meidenRoster"></div>
+              <div class="role-settings home-role-settings">
+                <h4>ROLE SETTINGS</h4>
+                <div class="role-settings-grid">
+                  <div class="multi-select" id="meidenAcePicker">
+                    <button id="meidenAceDropdown" type="button">
+                      <span>ACE</span>
+                      <strong id="meidenAceSummary">-</strong>
+                    </button>
+                    <div id="meidenAceMenu" class="multi-select-menu"></div>
+                  </div>
+                  <div class="multi-select" id="meidenBlockerPicker">
+                    <button id="meidenBlockerDropdown" type="button">
+                      <span>BLOCKER</span>
+                      <strong id="meidenBlockerSummary">-</strong>
+                    </button>
+                    <div id="meidenBlockerMenu" class="multi-select-menu"></div>
+                  </div>
+                  <div class="multi-select setter-picker" id="meidenSetterPicker">
+                    <button id="meidenSetterDropdown" type="button">
+                      <span>SETTER</span>
+                      <strong id="meidenSetterSummary">-</strong>
+                    </button>
+                    <div id="meidenSetterMenu" class="multi-select-menu"></div>
+                    <select id="meidenSetterSelect" class="hidden-role-select" aria-hidden="true" tabindex="-1"></select>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel away-panel">
+              <div class="panel-header">
+                <h3>AWAY TEAM</h3>
+                <span>max 12</span>
+              </div>
+              <div class="number-grid" id="opponentInputs"></div>
+              <div class="role-settings">
+                <h4>ROLE SETTINGS</h4>
+                <div class="role-settings-grid">
+                  <div class="multi-select" id="acePicker">
+                    <button id="aceDropdown" type="button">
+                      <span>ACE</span>
+                      <strong id="aceSummary">-</strong>
+                    </button>
+                    <div id="aceMenu" class="multi-select-menu"></div>
+                  </div>
+                  <div class="multi-select" id="blockerPicker">
+                    <button id="blockerDropdown" type="button">
+                      <span>BLOCKER</span>
+                      <strong id="blockerSummary">-</strong>
+                    </button>
+                    <div id="blockerMenu" class="multi-select-menu"></div>
+                  </div>
+                  <div class="multi-select setter-picker" id="opponentSetterPicker">
+                    <button id="opponentSetterDropdown" type="button">
+                      <span>SETTER</span>
+                      <strong id="opponentSetterSummary">-</strong>
+                    </button>
+                    <div id="opponentSetterMenu" class="multi-select-menu"></div>
+                    <select id="opponentSetterSelect" class="hidden-role-select" aria-hidden="true" tabindex="-1"></select>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel rotation-panel">
+              <div class="panel-header">
+                <h3>START ROTATION</h3>
+                <span>R1 base</span>
+              </div>
+              <div class="court-setup">
+                <div>
+                  <div class="court-title-row">
+                    <div id="setupOpponentCourtLabel" class="court-label">星城</div>
+                    <button id="resetOpponentRotation" class="reset-rotation-button" type="button">RESET</button>
+                  </div>
+                  <div class="court-row-label">BACK</div>
+                  <div class="court-row" id="opponentBackRow"></div>
+                  <div class="court-row-label">FRONT</div>
+                  <div class="court-row front" id="opponentFrontRow"></div>
+                </div>
+                <div class="net">NET</div>
+                <div>
+                  <div class="court-title-row">
+                    <div id="setupHomeCourtLabel" class="court-label">名電</div>
+                    <button id="resetMeidenRotation" class="reset-rotation-button" type="button">RESET</button>
+                  </div>
+                  <div class="court-row-label">FRONT</div>
+                  <div class="court-row front" id="meidenFrontRow"></div>
+                  <div class="court-row-label">BACK</div>
+                  <div class="court-row" id="meidenBackRow"></div>
+                </div>
+              </div>
+              <div class="serve-choice" role="radiogroup" aria-label="serve start">
+                <span>SERVE</span>
+                <label><input type="radio" name="serveStart" value="opponent" checked /> AWAY</label>
+                <label><input type="radio" name="serveStart" value="meiden" /> HOME</label>
+              </div>
+              <p id="setupError" class="error-text" role="alert"></p>
+            </section>
+          </div>
+        </section>
+
+        <section id="analysisScreen" class="screen" aria-labelledby="analysisTitle">
+          <div class="analysis-toolbar">
+            <div class="offset-controls">
+              <div class="offset-group">
+                <div class="stepper">
+                  <button id="meidenMinus" type="button">−1</button>
+                  <strong id="meidenOffsetLabel">HOME TEAM</strong>
+                  <button id="meidenPlus" type="button">＋1</button>
+                </div>
+                <small id="meidenStartLabel">HOME TEAM START S-</small>
+              </div>
+              <div class="offset-group opponent">
+                <div class="stepper">
+                  <button id="opponentMinus" type="button">−1</button>
+                  <strong id="opponentOffsetLabel">AWAY TEAM</strong>
+                  <button id="opponentPlus" type="button">＋1</button>
+                </div>
+                <small id="opponentStartLabel">AWAY TEAM START S-</small>
+              </div>
+            </div>
+            <div class="combo-chip" id="comboLabel">HOME START S- × AWAY START S-</div>
+          </div>
+
+          <div id="rotationCards" class="rotation-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js?v=20260625-14"></script>
+  </body>
+</html>

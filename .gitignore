@@ -1,0 +1,4 @@
+work/
+outputs/
+.vercel/
+.DS_Store
