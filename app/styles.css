@@ -937,20 +937,42 @@ body.analysis-mode .screen.active {
 }
 
 .net {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 28px;
   border-radius: 6px;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(245, 197, 66, 0.96) 0,
-    rgba(245, 197, 66, 0.96) 10px,
-    rgba(245, 197, 66, 0.55) 10px,
-    rgba(245, 197, 66, 0.55) 18px
-  );
-  color: #160b28;
-  font-weight: 950;
+  background:
+    linear-gradient(180deg, rgba(255, 245, 202, 0.2), rgba(92, 64, 18, 0.14)),
+    repeating-linear-gradient(90deg, rgba(230, 200, 125, 0.62) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(0deg, rgba(230, 200, 125, 0.52) 0 1px, transparent 1px 6px),
+    rgba(82, 59, 22, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 245, 202, 0.36),
+    inset 0 -1px 0 rgba(24, 15, 5, 0.28),
+    0 5px 14px rgba(8, 6, 16, 0.18);
+  color: transparent;
+  font-size: 0;
+  overflow: hidden;
+}
+
+.setup-net::before,
+.setup-net::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 228, 155, 0.58);
+}
+
+.setup-net::before {
+  top: 4px;
+}
+
+.setup-net::after {
+  bottom: 4px;
 }
 
 .serve-choice {
