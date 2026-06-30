@@ -10,23 +10,77 @@ const POSITION_LABELS = {
   frontRight: "前右",
 };
 
-const defaultOpponentPlayers = Array.from({ length: 12 }, (_, index) => String(index + 1)).map((number) => ({
-  name: "",
-  number,
-}));
-const roster = ["近藤", "北田", "田邊", "藤井", "笹本", "澤田", "山本", "加納", "植木", "北川", "大國", "松田"].map((name, index) => ({
-  name,
-  number: String(index + 1),
-}));
+const HOME_TEAM_DEFAULT = "名電";
+const AWAY_TEAM_DEFAULT = "星城";
+const defaultOpponentPlayers = [
+  { name: "柏崎", number: "1" },
+  { name: "石田", number: "2" },
+  { name: "ソフィア", number: "3" },
+  { name: "辻", number: "4" },
+  { name: "内藤", number: "5" },
+  { name: "竹川", number: "6" },
+  { name: "北田", number: "7" },
+  { name: "Name", number: "8" },
+  { name: "Name", number: "9" },
+  { name: "Name", number: "10" },
+  { name: "Name", number: "11" },
+  { name: "横江", number: "13" },
+];
+const roster = [
+  { name: "立石", number: "1" },
+  { name: "渡邊", number: "2" },
+  { name: "堀江", number: "3" },
+  { name: "山崎", number: "4" },
+  { name: "片桐", number: "5" },
+  { name: "福島", number: "6" },
+  { name: "山本", number: "7" },
+  { name: "北川", number: "8" },
+  { name: "植木", number: "9" },
+  { name: "北川", number: "10" },
+  { name: "中島", number: "11" },
+  { name: "松田", number: "12" },
+];
+const DEFAULT_SETUP = {
+  opponent: {
+    teamName: AWAY_TEAM_DEFAULT,
+    selected: ["opponent-3", "opponent-0", "opponent-4", "opponent-11", "opponent-1", "opponent-5"],
+    aces: ["opponent-0"],
+    blockers: ["opponent-1"],
+    setter: "opponent-3",
+    court: {
+      backLeft: "opponent-3",
+      backCenter: "opponent-0",
+      backRight: "opponent-4",
+      frontLeft: "opponent-11",
+      frontCenter: "opponent-1",
+      frontRight: "opponent-5",
+    },
+  },
+  meiden: {
+    teamName: HOME_TEAM_DEFAULT,
+    selected: ["meiden-1", "meiden-2", "meiden-7", "meiden-5", "meiden-3", "meiden-4"],
+    aces: [],
+    blockers: ["meiden-5"],
+    setter: "meiden-4",
+    court: {
+      frontLeft: "meiden-1",
+      frontCenter: "meiden-2",
+      frontRight: "meiden-7",
+      backLeft: "meiden-5",
+      backCenter: "meiden-3",
+      backRight: "meiden-4",
+    },
+  },
+};
 const state = {
-  selectedOpponent: new Set(["opponent-0", "opponent-1", "opponent-2", "opponent-3", "opponent-4", "opponent-5"]),
-  selectedMeiden: new Set(["meiden-0", "meiden-1", "meiden-2", "meiden-3", "meiden-4", "meiden-5"]),
-  opponentAces: new Set(),
-  opponentBlockers: new Set(),
-  meidenAces: new Set(),
-  meidenBlockers: new Set(),
-  opponentSetter: "",
-  meidenSetter: "",
+  selectedOpponent: new Set(DEFAULT_SETUP.opponent.selected),
+  selectedMeiden: new Set(DEFAULT_SETUP.meiden.selected),
+  opponentAces: new Set(DEFAULT_SETUP.opponent.aces),
+  opponentBlockers: new Set(DEFAULT_SETUP.opponent.blockers),
+  meidenAces: new Set(DEFAULT_SETUP.meiden.aces),
+  meidenBlockers: new Set(DEFAULT_SETUP.meiden.blockers),
+  opponentSetter: DEFAULT_SETUP.opponent.setter,
+  meidenSetter: DEFAULT_SETUP.meiden.setter,
   config: null,
   meidenOffset: 0,
   opponentOffset: 0,
@@ -154,6 +208,46 @@ function buildRoster() {
     });
     wrapper.append(tile);
   });
+}
+
+function defaultPlayersFor(team) {
+  return team === "opponent" ? defaultOpponentPlayers : roster;
+}
+
+function setTeamName(team, value) {
+  const input = team === "opponent" ? $("#opponentTeamName") : $("#homeTeamName");
+  const label = team === "opponent" ? $("#setupOpponentCourtLabel") : $("#setupHomeCourtLabel");
+  input.value = value;
+  label.textContent = value || (team === "opponent" ? "AWAY TEAM" : "HOME TEAM");
+}
+
+function setTeamInputs(team, players) {
+  const selector = team === "opponent" ? "#opponentInputs .role-player-card" : "#meidenRoster .role-player-card";
+  $$(selector).forEach((card, index) => {
+    const player = players[index] || { name: "", number: "" };
+    const nameInput = card.querySelector('input[data-field="name"]');
+    const numberInput = card.querySelector('input[data-field="number"]');
+    nameInput.value = player.name;
+    numberInput.value = player.number;
+    numberInput.dataset.previousNumber = player.number;
+  });
+}
+
+function setDefaultRoles(team) {
+  const defaults = DEFAULT_SETUP[team];
+  if (team === "opponent") {
+    state.selectedOpponent = new Set(defaults.selected);
+    state.opponentAces = new Set(defaults.aces);
+    state.opponentBlockers = new Set(defaults.blockers);
+    state.opponentSetter = defaults.setter;
+    state.opponentOffset = 0;
+  } else {
+    state.selectedMeiden = new Set(defaults.selected);
+    state.meidenAces = new Set(defaults.aces);
+    state.meidenBlockers = new Set(defaults.blockers);
+    state.meidenSetter = defaults.setter;
+    state.meidenOffset = 0;
+  }
 }
 
 function numberInputs(team) {
@@ -502,14 +596,39 @@ function renderCourtSelects(team, values = registeredIds(team), options = {}) {
   updateRoleCards(team);
 }
 
-function resetStartRotation(team) {
-  $$(`select[data-team="${team}"]`).forEach((select) => {
-    select.value = "";
-  });
+function setDefaultCourt(team) {
+  const defaults = DEFAULT_SETUP[team];
   state.manualCourtInput[team] = true;
-  if (team === "opponent") state.selectedOpponent = new Set();
-  else state.selectedMeiden = new Set();
   renderCourtSelects(team, [], { autofill: false });
+  Object.entries(defaults.court).forEach(([position, value]) => {
+    const select = $(`select[data-team="${team}"][data-position="${position}"]`);
+    if (select) select.value = value;
+  });
+  if (team === "opponent") {
+    state.selectedOpponent = new Set(Object.values(defaults.court));
+  } else {
+    state.selectedMeiden = new Set(Object.values(defaults.court));
+  }
+  renderCourtSelects(team, Object.values(defaults.court), { autofill: false });
+}
+
+function applyTeamDefaults(team) {
+  const defaults = DEFAULT_SETUP[team];
+  setTeamName(team, defaults.teamName);
+  setTeamInputs(team, defaultPlayersFor(team));
+  setDefaultRoles(team);
+  state.config = null;
+  state.manualCourtInput[team] = true;
+  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
+  if (team === "opponent") refreshOpponentSelects();
+  else refreshMeidenSelects();
+  setDefaultCourt(team);
+  $("#setupError").textContent = "";
+  $("#rotationCards").innerHTML = "";
+}
+
+function resetStartRotation(team) {
+  setDefaultCourt(team);
 }
 
 function resetTeamSetup(team) {
@@ -517,39 +636,7 @@ function resetTeamSetup(team) {
   const teamLabel = isOpponent ? "AWAY TEAM" : "HOME TEAM";
   if (!window.confirm(`${teamLabel}の入力内容をリセットしますか？`)) return;
 
-  const teamNameInput = isOpponent ? $("#opponentTeamName") : $("#homeTeamName");
-  const courtLabel = isOpponent ? $("#setupOpponentCourtLabel") : $("#setupHomeCourtLabel");
-  const rosterSelector = isOpponent ? "#opponentInputs input" : "#meidenRoster input";
-  teamNameInput.value = "";
-  courtLabel.textContent = teamLabel;
-  $("#setupError").textContent = "";
-
-  $$(rosterSelector).forEach((input) => {
-    input.value = "";
-    if (input.dataset.field === "number") input.dataset.previousNumber = "";
-  });
-
-  if (isOpponent) {
-    state.selectedOpponent = new Set();
-    state.opponentAces = new Set();
-    state.opponentBlockers = new Set();
-    state.opponentSetter = "";
-    state.opponentOffset = 0;
-  } else {
-    state.selectedMeiden = new Set();
-    state.meidenAces = new Set();
-    state.meidenBlockers = new Set();
-    state.meidenSetter = "";
-    state.meidenOffset = 0;
-  }
-  state.config = null;
-  state.manualCourtInput[team] = true;
-  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
-
-  if (isOpponent) refreshOpponentSelects();
-  else refreshMeidenSelects();
-  renderCourtSelects(team, [], { autofill: false });
-  $("#rotationCards").innerHTML = "";
+  applyTeamDefaults(team);
 }
 
 function readCourt(team) {
@@ -793,33 +880,8 @@ function bindEvents() {
 function init() {
   buildOpponentInputs();
   buildRoster();
-  refreshOpponentSelects();
-  refreshMeidenSelects();
-
-  const opponentDefaults = {
-    backLeft: "opponent-0",
-    backCenter: "opponent-1",
-    backRight: "opponent-2",
-    frontLeft: "opponent-3",
-    frontCenter: "opponent-4",
-    frontRight: "opponent-5",
-  };
-  const meidenDefaults = {
-    frontLeft: "meiden-0",
-    frontCenter: "meiden-1",
-    frontRight: "meiden-2",
-    backLeft: "meiden-3",
-    backCenter: "meiden-4",
-    backRight: "meiden-5",
-  };
-  Object.entries(opponentDefaults).forEach(([position, value]) => {
-    const select = $(`select[data-team="opponent"][data-position="${position}"]`);
-    if (select) select.value = value;
-  });
-  Object.entries(meidenDefaults).forEach(([position, value]) => {
-    const select = $(`select[data-team="meiden"][data-position="${position}"]`);
-    if (select) select.value = value;
-  });
+  applyTeamDefaults("opponent");
+  applyTeamDefaults("meiden");
   bindEvents();
 }
 
