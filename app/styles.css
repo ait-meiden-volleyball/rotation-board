@@ -45,10 +45,16 @@ select {
 }
 
 .official-link-bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 8px;
+  padding: 0 0 4px;
+  background: linear-gradient(180deg, rgba(8, 6, 18, 0.96), rgba(8, 6, 18, 0.78) 78%, transparent);
+  backdrop-filter: blur(18px);
 }
 
 .official-link-card {
@@ -201,12 +207,15 @@ select {
 }
 
 .global-tabs {
+  position: sticky;
+  top: 84px;
   width: 242px;
   margin-left: auto;
-  z-index: 20;
+  z-index: 59;
   display: grid;
   grid-template-columns: repeat(2, 118px);
   gap: 6px;
+  padding-bottom: 4px;
 }
 
 body.analysis-mode {
@@ -1539,6 +1548,10 @@ body.analysis-mode .screen.active {
   .official-link-card {
     min-height: 58px;
     grid-template-columns: 42px minmax(0, 1fr) 20px;
+  }
+
+  .global-tabs {
+    top: 136px;
   }
 
   .official-link-kicker {

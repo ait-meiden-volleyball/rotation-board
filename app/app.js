@@ -15,7 +15,7 @@ const AWAY_TEAM_DEFAULT = "星城";
 const defaultOpponentPlayers = [
   { name: "柏崎", number: "1" },
   { name: "石田", number: "2" },
-  { name: "ソフィア", number: "3" },
+  { name: "", number: "3" },
   { name: "辻", number: "4" },
   { name: "内藤", number: "5" },
   { name: "竹川", number: "6" },
@@ -36,7 +36,7 @@ const roster = [
   { name: "山本", number: "7" },
   { name: "北川", number: "8" },
   { name: "植木", number: "9" },
-  { name: "北川", number: "10" },
+  { name: "金田", number: "10" },
   { name: "中島", number: "11" },
   { name: "松田", number: "12" },
 ];
