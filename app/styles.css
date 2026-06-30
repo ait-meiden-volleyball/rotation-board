@@ -44,10 +44,96 @@ select {
   padding: 12px;
 }
 
+.official-link-bar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.official-link-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 8px 12px;
+  border: 1px solid rgba(215, 184, 107, 0.24);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(215, 184, 107, 0.13), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    #0b0d16;
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.official-link-card:hover {
+  border-color: rgba(215, 184, 107, 0.48);
+  background:
+    linear-gradient(135deg, rgba(215, 184, 107, 0.18), transparent 44%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.05)),
+    #101321;
+  transform: translateY(-1px);
+}
+
+.official-link-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(75, 42, 143, 0.76);
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.website-link .official-link-icon {
+  background: rgba(18, 21, 34, 0.92);
+  font-size: 1.05rem;
+}
+
+.official-link-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.official-link-copy strong {
+  font-size: 0.92rem;
+  line-height: 1.12;
+}
+
+.official-link-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.official-link-arrow {
+  color: var(--gold);
+  font-size: 1.05rem;
+  font-weight: 950;
+  text-align: right;
+}
+
 .global-tabs {
-  position: fixed;
-  top: 10px;
-  right: 12px;
+  width: 242px;
+  margin-left: auto;
   z-index: 20;
   display: grid;
   grid-template-columns: repeat(2, 118px);
@@ -77,6 +163,10 @@ body.analysis-mode .global-tabs {
   grid-template-columns: repeat(2, 120px);
   gap: 6px;
   padding: 0;
+}
+
+body.analysis-mode .official-link-bar {
+  display: none;
 }
 
 body.analysis-mode .global-tabs .tab-button {
@@ -1242,6 +1332,15 @@ body.analysis-mode .screen.active {
 @media (max-width: 760px) {
   .app-shell {
     padding: 10px;
+  }
+
+  .official-link-bar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .official-link-card {
+    min-height: 58px;
   }
 
   .topbar,
