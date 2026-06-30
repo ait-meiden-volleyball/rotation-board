@@ -55,16 +55,17 @@ select {
 }
 
 body.analysis-mode {
-  overflow-y: auto;
+  overflow: hidden;
   overflow-x: hidden;
 }
 
 body.analysis-mode .app-shell {
   position: relative;
   width: 100%;
-  min-height: 100dvh;
+  height: 100dvh;
+  min-height: 0;
   padding: 4px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 body.analysis-mode .global-tabs {
@@ -1368,15 +1369,16 @@ body.analysis-mode .combo-chip {
 
 body.analysis-mode .rotation-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(410px, calc((100dvh - 48px) / 2)));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 6px 7px;
-  height: auto;
+  height: 100%;
+  min-height: 0;
 }
 
 body.analysis-mode .rotation-card {
   position: relative;
   display: block;
-  min-height: 410px;
+  min-height: 0;
   padding: 3px;
   border-radius: 24px;
   border-color: rgba(255, 255, 255, 0.14);
@@ -1391,8 +1393,8 @@ body.analysis-mode .mini-court {
   height: 100%;
   min-height: 0;
   margin: 0 auto;
-  padding: 15px 7px 12px;
-  gap: 9px;
+  padding: 11px 7px 9px;
+  gap: 5px;
   border-radius: 22px;
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) 12px minmax(0, 1fr) minmax(0, 1fr);
 }
@@ -1407,8 +1409,8 @@ body.analysis-mode .mini-court::after {
 
 body.analysis-mode .mini-court .court-row {
   min-height: 0;
-  gap: 6px;
-  padding: 5px 2px;
+  gap: 5px;
+  padding: 2px;
   border-radius: 12px;
 }
 
@@ -1534,11 +1536,11 @@ body.analysis-mode .ace-front {
 
 body.analysis-mode #analysisScreen {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: 42px minmax(0, 1fr);
   gap: 6px;
-  height: auto;
+  height: calc(100dvh - 8px);
   min-height: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 body.analysis-mode .analysis-toolbar {
@@ -1549,9 +1551,9 @@ body.analysis-mode .analysis-toolbar {
 }
 
 body.analysis-mode .rotation-grid {
-  height: auto;
+  height: 100%;
   min-height: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 @keyframes boardSettle {
