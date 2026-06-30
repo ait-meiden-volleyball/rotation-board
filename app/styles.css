@@ -81,7 +81,7 @@ body.analysis-mode .global-tabs {
 
 body.analysis-mode .global-tabs .tab-button {
   width: 120px;
-  min-height: 38px;
+  min-height: 57px;
   padding: 0 8px;
   font-size: 0.74rem;
   line-height: 1;
@@ -1283,7 +1283,7 @@ body.analysis-mode .analysis-toolbar {
   grid-template-areas:
     "controls combo";
   gap: 6px;
-  min-height: 42px;
+  min-height: 61px;
   margin-bottom: 1px;
   padding: 2px 256px 2px 3px;
   border-radius: 12px;
@@ -1331,7 +1331,7 @@ body.analysis-mode .stepper {
 
 body.analysis-mode .stepper button {
   min-width: 74px;
-  min-height: 38px;
+  min-height: 57px;
   padding: 0 8px;
   border-radius: 12px;
   font-size: 0.72rem;
@@ -1359,7 +1359,7 @@ body.analysis-mode .combo-chip {
   min-width: 0;
   width: 100%;
   padding: 0 5px;
-  min-height: 38px;
+  min-height: 57px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1536,7 +1536,7 @@ body.analysis-mode .ace-front {
 
 body.analysis-mode #analysisScreen {
   display: grid;
-  grid-template-rows: 42px minmax(0, 1fr);
+  grid-template-rows: 61px minmax(0, 1fr);
   gap: 6px;
   height: calc(100dvh - 8px);
   min-height: 0;

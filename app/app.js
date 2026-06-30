@@ -10,23 +10,23 @@ const POSITION_LABELS = {
   frontRight: "前右",
 };
 
-const defaultOpponentPlayers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "12", "18"].map((number) => ({
+const defaultOpponentPlayers = Array.from({ length: 12 }, (_, index) => String(index + 1)).map((number) => ({
   name: "",
   number,
 }));
-const roster = ["近藤", "北田", "田邊", "藤井", "笹本", "澤田", "山本", "加納", "植木", "北川", "大國", "松田"].map((name) => ({
+const roster = ["近藤", "北田", "田邊", "藤井", "笹本", "澤田", "山本", "加納", "植木", "北川", "大國", "松田"].map((name, index) => ({
   name,
-  number: "",
+  number: String(index + 1),
 }));
 const state = {
-  selectedOpponent: new Set(["opponent-0", "opponent-2", "opponent-6", "opponent-9", "opponent-10", "opponent-11"]),
+  selectedOpponent: new Set(["opponent-0", "opponent-1", "opponent-2", "opponent-3", "opponent-4", "opponent-5"]),
   selectedMeiden: new Set(["meiden-0", "meiden-1", "meiden-2", "meiden-3", "meiden-4", "meiden-5"]),
-  opponentAces: new Set(["opponent-6", "opponent-10"]),
-  opponentBlockers: new Set(["opponent-11"]),
+  opponentAces: new Set(),
+  opponentBlockers: new Set(),
   meidenAces: new Set(),
   meidenBlockers: new Set(),
-  opponentSetter: "opponent-2",
-  meidenSetter: "meiden-3",
+  opponentSetter: "",
+  meidenSetter: "",
   config: null,
   meidenOffset: 0,
   opponentOffset: 0,
@@ -749,14 +749,13 @@ function init() {
   refreshOpponentSelects();
   refreshMeidenSelects();
 
-  // Excel由来の初期配置に近い例を初期値として置く。
   const opponentDefaults = {
-    backLeft: "opponent-10",
-    backCenter: "opponent-11",
-    backRight: "opponent-0",
-    frontLeft: "opponent-9",
-    frontCenter: "opponent-2",
-    frontRight: "opponent-6",
+    backLeft: "opponent-0",
+    backCenter: "opponent-1",
+    backRight: "opponent-2",
+    frontLeft: "opponent-3",
+    frontCenter: "opponent-4",
+    frontRight: "opponent-5",
   };
   const meidenDefaults = {
     frontLeft: "meiden-0",
