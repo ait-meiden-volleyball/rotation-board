@@ -512,6 +512,42 @@ function resetStartRotation(team) {
   renderCourtSelects(team, [], { autofill: false });
 }
 
+function resetSetupInputs() {
+  if (!window.confirm("入力内容をすべてリセットしますか？")) return;
+
+  $("#homeTeamName").value = "";
+  $("#opponentTeamName").value = "";
+  $("#setupHomeCourtLabel").textContent = "HOME TEAM";
+  $("#setupOpponentCourtLabel").textContent = "AWAY TEAM";
+  $("#setupError").textContent = "";
+
+  $$("#meidenRoster input, #opponentInputs input").forEach((input) => {
+    input.value = "";
+    if (input.dataset.field === "number") input.dataset.previousNumber = "";
+  });
+
+  state.selectedOpponent = new Set();
+  state.selectedMeiden = new Set();
+  state.opponentAces = new Set();
+  state.opponentBlockers = new Set();
+  state.meidenAces = new Set();
+  state.meidenBlockers = new Set();
+  state.opponentSetter = "";
+  state.meidenSetter = "";
+  state.config = null;
+  state.meidenOffset = 0;
+  state.opponentOffset = 0;
+  state.manualCourtInput.opponent = true;
+  state.manualCourtInput.meiden = true;
+  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
+
+  refreshOpponentSelects();
+  refreshMeidenSelects();
+  renderCourtSelects("opponent", [], { autofill: false });
+  renderCourtSelects("meiden", [], { autofill: false });
+  $("#rotationCards").innerHTML = "";
+}
+
 function readCourt(team) {
   const court = {};
   $$(`select[data-team="${team}"]`).forEach((select) => {
@@ -698,6 +734,7 @@ function bindEvents() {
   $("#tabAnalysis").addEventListener("click", () => {
     startAnalysis();
   });
+  $("#resetSetupInputs").addEventListener("click", resetSetupInputs);
   $("#resetOpponentRotation").addEventListener("click", () => resetStartRotation("opponent"));
   $("#resetMeidenRotation").addEventListener("click", () => resetStartRotation("meiden"));
   $("#aceDropdown").addEventListener("click", () => toggleMultiSelect("acePicker"));
