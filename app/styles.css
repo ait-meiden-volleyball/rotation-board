@@ -1016,6 +1016,55 @@ body.analysis-mode .screen.active {
   color: var(--text);
 }
 
+.powered-by-mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 6px 14px 6px 16px;
+  border: 1px solid rgba(215, 184, 107, 0.28);
+  border-radius: 12px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(16, 13, 28, 0.86), rgba(57, 32, 92, 0.68));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 10px 26px rgba(3, 2, 8, 0.16);
+  overflow: hidden;
+}
+
+.powered-by-mark::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  width: 82px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(215, 184, 107, 0.7));
+}
+
+.powered-by-mark span {
+  position: relative;
+  z-index: 1;
+  color: var(--gold);
+  font-size: 0.58rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+
+.powered-by-mark img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: clamp(88px, 14vw, 132px);
+  max-height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.24));
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;
