@@ -741,6 +741,11 @@ function bindEvents() {
     state.opponentOffset -= 1;
     renderAnalysis();
   });
+  ["meidenPlus", "meidenMinus", "opponentPlus", "opponentMinus"].forEach((id) => {
+    $(`#${id}`).addEventListener("dblclick", (event) => {
+      event.preventDefault();
+    });
+  });
 }
 
 function init() {

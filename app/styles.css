@@ -1337,6 +1337,10 @@ body.analysis-mode .stepper button {
   font-size: 0.72rem;
   line-height: 1;
   white-space: nowrap;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
   transition:
     transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
     background 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
