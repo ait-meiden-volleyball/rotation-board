@@ -959,6 +959,8 @@ body.analysis-mode .screen.active {
 
 .setup-net {
   background:
+    linear-gradient(90deg, rgba(255, 245, 208, 0.38) 0 1px, transparent 1px 4px, transparent calc(100% - 4px), rgba(255, 245, 208, 0.38) calc(100% - 1px) 100%),
+    linear-gradient(90deg, rgba(126, 91, 32, 0.8) 0 4px, transparent 4px calc(100% - 4px), rgba(126, 91, 32, 0.8) calc(100% - 4px) 100%),
     linear-gradient(180deg, rgba(255, 248, 221, 0.18), rgba(80, 55, 20, 0.16)),
     repeating-linear-gradient(90deg, rgba(236, 210, 148, 0.66) 0 1px, transparent 1px 7px),
     repeating-linear-gradient(0deg, rgba(236, 210, 148, 0.5) 0 1px, transparent 1px 5px),
