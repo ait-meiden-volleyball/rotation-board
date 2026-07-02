@@ -1647,13 +1647,13 @@ body.analysis-mode .screen.active {
 
 body.analysis-mode .analysis-toolbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(132px, 196px);
+  grid-template-columns: minmax(0, 1fr) minmax(132px, 176px);
   grid-template-areas:
     "controls combo";
   gap: 6px;
   min-height: 61px;
   margin-bottom: 1px;
-  padding: 2px 256px 2px 3px;
+  padding: 2px 292px 2px 3px;
   border-radius: 12px;
   background: rgba(20, 21, 30, 0.72);
   box-shadow: none;
