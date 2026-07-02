@@ -816,8 +816,21 @@ function renderAnalysis() {
   $("#rotationCards").innerHTML = Array.from({ length: 6 }, (_, index) => renderCard(index, state.config)).join("");
 }
 
-function toggleServeMarker() {
+function moveServeNext() {
   state.serveMarkerSide = state.serveMarkerSide === "meiden" ? "opponent" : "meiden";
+  if (state.serveMarkerSide === "opponent") state.opponentOffset += 1;
+  else state.meidenOffset += 1;
+  renderAnalysis();
+}
+
+function moveServeBack() {
+  if (state.serveMarkerSide === "meiden") {
+    state.meidenOffset -= 1;
+    state.serveMarkerSide = "opponent";
+  } else {
+    state.opponentOffset -= 1;
+    state.serveMarkerSide = "meiden";
+  }
   renderAnalysis();
 }
 
@@ -877,8 +890,8 @@ function bindEvents() {
     state.opponentOffset -= 1;
     renderAnalysis();
   });
-  $("#serveNext").addEventListener("click", toggleServeMarker);
-  $("#serveBack").addEventListener("click", toggleServeMarker);
+  $("#serveNext").addEventListener("click", moveServeNext);
+  $("#serveBack").addEventListener("click", moveServeBack);
   ["meidenPlus", "meidenMinus", "opponentPlus", "opponentMinus", "serveNext", "serveBack"].forEach((id) => {
     $(`#${id}`).addEventListener("dblclick", (event) => {
       event.preventDefault();
