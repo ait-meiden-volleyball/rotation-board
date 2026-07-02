@@ -711,7 +711,7 @@ function startAnalysis() {
   };
   state.meidenOffset = 0;
   state.opponentOffset = 0;
-  state.serveMarkerSide = "meiden";
+  state.serveMarkerSide = state.config.serveStart;
   renderAnalysis();
   switchScreen("analysis");
 }
