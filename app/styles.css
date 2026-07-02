@@ -1165,14 +1165,50 @@ body.analysis-mode .screen.active {
   text-align: center;
 }
 
-.combo-chip {
+.serve-nav-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(104px, 1fr));
+  gap: 8px;
   min-width: 270px;
-  padding: 14px 16px;
+}
+
+.serve-nav-card {
+  position: relative;
+  min-height: 57px;
+  padding: 0 16px;
+  border: 1px solid rgba(215, 184, 107, 0.42);
   border-radius: 12px;
-  background: rgba(245, 197, 66, 0.13);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.13), transparent 34%),
+    linear-gradient(135deg, rgba(70, 37, 121, 0.94), rgba(18, 10, 32, 0.96));
   color: var(--gold);
+  font-size: 0.86rem;
   font-weight: 950;
-  text-align: center;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13);
+  overflow: hidden;
+}
+
+.serve-nav-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(215, 184, 107, 0.08));
+}
+
+.serve-nav-card:hover {
+  border-color: rgba(215, 184, 107, 0.68);
+  filter: brightness(1.06);
 }
 
 .legend {
@@ -1604,7 +1640,7 @@ body.analysis-mode .screen.active {
 
   .tab-button,
   .offset-group,
-  .combo-chip {
+  .serve-nav-cards {
     width: 100%;
   }
 }
@@ -1690,17 +1726,19 @@ body.analysis-mode .stepper strong {
   white-space: nowrap;
 }
 
-body.analysis-mode .combo-chip {
+body.analysis-mode .serve-nav-cards {
   grid-area: combo;
   min-width: 0;
   width: 100%;
-  padding: 0 5px;
   min-height: 57px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 5px;
+}
+
+body.analysis-mode .serve-nav-card {
+  min-height: 57px;
+  padding: 0 8px;
   border-radius: 12px;
-  font-size: 0.55rem;
+  font-size: 0.68rem;
 }
 
 body.analysis-mode .rotation-grid {

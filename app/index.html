@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rotation Board Ver1</title>
-    <link rel="stylesheet" href="./styles.css?v=20260630-20" />
+    <link rel="stylesheet" href="./styles.css?v=20260702-01" />
   </head>
   <body>
     <div class="app-shell">
@@ -213,7 +213,10 @@
                 <small id="opponentStartLabel">AWAY TEAM START S-</small>
               </div>
             </div>
-            <div class="combo-chip" id="comboLabel">HOME START S- × AWAY START S-</div>
+            <div class="serve-nav-cards" aria-label="serve marker navigation">
+              <button id="serveBack" class="serve-nav-card" type="button">BACK</button>
+              <button id="serveNext" class="serve-nav-card" type="button">NEXT</button>
+            </div>
           </div>
 
           <div id="rotationCards" class="rotation-grid"></div>
@@ -221,6 +224,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260630-20"></script>
+    <script src="./app.js?v=20260702-01"></script>
   </body>
 </html>

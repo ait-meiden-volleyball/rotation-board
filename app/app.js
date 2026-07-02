@@ -84,6 +84,7 @@ const state = {
   config: null,
   meidenOffset: 0,
   opponentOffset: 0,
+  serveMarkerSide: "meiden",
   manualCourtInput: {
     opponent: false,
     meiden: false,
@@ -710,6 +711,7 @@ function startAnalysis() {
   };
   state.meidenOffset = 0;
   state.opponentOffset = 0;
+  state.serveMarkerSide = "meiden";
   renderAnalysis();
   switchScreen("analysis");
 }
@@ -776,9 +778,10 @@ function renderCard(index, config) {
   const opponentRotation = rotateCourt(config.opponentCourt, opponentSteps(index));
   const meidenRotation = rotateCourt(config.meidenCourt, meidenSteps(index));
   const setterZoneLabel = `S${zoneNumberOf(meidenRotation, config.meidenSetter)}`;
+  const serveSide = state.serveMarkerSide;
   const serveMarker =
     index === 0
-      ? `<div class="serve-marker serve-${config.serveStart}" aria-label="${config.serveStart === "opponent" ? "AWAY" : "HOME"} serve">SERVE</div>`
+      ? `<div class="serve-marker serve-${serveSide}" aria-label="${serveSide === "opponent" ? "AWAY" : "HOME"} serve">SERVE</div>`
       : "";
 
   return `
@@ -810,8 +813,12 @@ function renderAnalysis() {
   $("#opponentOffsetLabel").textContent = state.config.opponentTeamName;
   $("#meidenStartLabel").textContent = `${state.config.homeTeamName} START ${homeStartLabel}`;
   $("#opponentStartLabel").textContent = `${state.config.opponentTeamName} START ${opponentStartLabel}`;
-  $("#comboLabel").textContent = `${state.config.homeTeamName} START ${homeStartLabel} × ${state.config.opponentTeamName} START ${opponentStartLabel}`;
   $("#rotationCards").innerHTML = Array.from({ length: 6 }, (_, index) => renderCard(index, state.config)).join("");
+}
+
+function toggleServeMarker() {
+  state.serveMarkerSide = state.serveMarkerSide === "meiden" ? "opponent" : "meiden";
+  renderAnalysis();
 }
 
 function bindEvents() {
@@ -870,7 +877,9 @@ function bindEvents() {
     state.opponentOffset -= 1;
     renderAnalysis();
   });
-  ["meidenPlus", "meidenMinus", "opponentPlus", "opponentMinus"].forEach((id) => {
+  $("#serveNext").addEventListener("click", toggleServeMarker);
+  $("#serveBack").addEventListener("click", toggleServeMarker);
+  ["meidenPlus", "meidenMinus", "opponentPlus", "opponentMinus", "serveNext", "serveBack"].forEach((id) => {
     $(`#${id}`).addEventListener("dblclick", (event) => {
       event.preventDefault();
     });
