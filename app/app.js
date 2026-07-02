@@ -686,6 +686,8 @@ function switchScreen(name) {
   $("#analysisScreen").classList.toggle("active", name === "analysis");
   $("#tabSetup").classList.toggle("active", name === "setup");
   $("#tabAnalysis").classList.toggle("active", name === "analysis");
+  $("#mobileTabSetup")?.classList.toggle("active", name === "setup");
+  $("#mobileTabAnalysis")?.classList.toggle("active", name === "analysis");
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 }
 
@@ -843,6 +845,10 @@ function bindEvents() {
   $("#opponentTeamName").addEventListener("input", syncTeamLabels);
   $("#tabSetup").addEventListener("click", () => switchScreen("setup"));
   $("#tabAnalysis").addEventListener("click", () => {
+    startAnalysis();
+  });
+  $("#mobileTabSetup")?.addEventListener("click", () => switchScreen("setup"));
+  $("#mobileTabAnalysis")?.addEventListener("click", () => {
     startAnalysis();
   });
   $("#resetHomeSetup").addEventListener("click", () => resetTeamSetup("meiden"));

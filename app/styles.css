@@ -1172,6 +1172,10 @@ body.analysis-mode .screen.active {
   min-width: 270px;
 }
 
+.analysis-mobile-tabs {
+  display: none;
+}
+
 .serve-nav-card {
   position: relative;
   min-height: 57px;
@@ -1940,23 +1944,28 @@ body.analysis-mode .rotation-grid {
   }
 
   body.analysis-mode .analysis-toolbar {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "controls"
-      "combo";
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
     gap: 5px;
     min-height: 0;
     padding: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
   }
 
   body.analysis-mode .offset-controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex: 0 0 auto;
     gap: 5px;
+    width: auto;
   }
 
   body.analysis-mode .offset-group {
-    width: 100%;
+    flex: 0 0 auto;
+    width: auto;
   }
 
   body.analysis-mode .stepper {
@@ -1969,20 +1978,33 @@ body.analysis-mode .rotation-grid {
   }
 
   body.analysis-mode .stepper button {
-    width: 100%;
+    width: 96px;
     min-width: 0;
     min-height: 57px;
   }
 
   body.analysis-mode .serve-nav-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
+    flex: 0 0 auto;
+    grid-template-columns: repeat(2, 96px);
+    width: auto;
     min-height: 57px;
     gap: 5px;
   }
 
   body.analysis-mode .serve-nav-card {
-    width: 100%;
+    width: 96px;
+    min-height: 57px;
+  }
+
+  body.analysis-mode .analysis-mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, 112px);
+    flex: 0 0 auto;
+    gap: 5px;
+  }
+
+  body.analysis-mode .analysis-mobile-tabs .tab-button {
+    width: 112px;
     min-height: 57px;
   }
 }
