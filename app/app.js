@@ -81,6 +81,8 @@ const state = {
   meidenBlockers: new Set(DEFAULT_SETUP.meiden.blockers),
   opponentSetter: DEFAULT_SETUP.opponent.setter,
   meidenSetter: DEFAULT_SETUP.meiden.setter,
+  opponentKeyRote: "",
+  meidenKeyRote: "",
   config: null,
   meidenOffset: 0,
   opponentOffset: 0,
@@ -625,13 +627,17 @@ function clearTeamRoles(team) {
     state.opponentAces = new Set();
     state.opponentBlockers = new Set();
     state.opponentSetter = "";
+    state.opponentKeyRote = "";
     state.opponentOffset = 0;
+    $("#opponentKeyRote").value = "";
   } else {
     state.selectedMeiden = new Set();
     state.meidenAces = new Set();
     state.meidenBlockers = new Set();
     state.meidenSetter = "";
+    state.meidenKeyRote = "";
     state.meidenOffset = 0;
+    $("#meidenKeyRote").value = "";
   }
 }
 
@@ -750,6 +756,8 @@ function startAnalysis() {
     meidenBlockers: new Set(state.meidenBlockers),
     opponentSetter: state.opponentSetter,
     meidenSetter: state.meidenSetter,
+    opponentKeyRote: state.opponentKeyRote,
+    meidenKeyRote: state.meidenKeyRote,
     opponentPlayers: playerMap("opponent"),
     meidenPlayers: playerMap("meiden"),
     opponentCourt: readCourt("opponent"),
@@ -825,6 +833,13 @@ function renderCard(index, config) {
   const opponentRotation = rotateCourt(config.opponentCourt, opponentSteps(index));
   const meidenRotation = rotateCourt(config.meidenCourt, meidenSteps(index));
   const setterZoneLabel = `S${zoneNumberOf(meidenRotation, config.meidenSetter)}`;
+  const opponentSetterZoneLabel = `S${opponentZoneNumberOf(opponentRotation, config.opponentSetter)}`;
+  const highlightClasses = [
+    config.meidenKeyRote && setterZoneLabel === config.meidenKeyRote ? "key-rote-home" : "",
+    config.opponentKeyRote && opponentSetterZoneLabel === config.opponentKeyRote ? "key-rote-away" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const serveSide = state.serveMarkerSide;
   const serveMarker =
     index === 0
@@ -832,7 +847,7 @@ function renderCard(index, config) {
       : "";
 
   return `
-    <article class="rotation-card">
+    <article class="rotation-card ${highlightClasses}">
       <div class="card-header">
         <h3>${setterZoneLabel}</h3>
       </div>
@@ -888,6 +903,20 @@ function bindEvents() {
   };
   $("#homeTeamName").addEventListener("input", syncTeamLabels);
   $("#opponentTeamName").addEventListener("input", syncTeamLabels);
+  $("#meidenKeyRote").addEventListener("change", (event) => {
+    state.meidenKeyRote = event.target.value;
+    if (state.config) {
+      state.config.meidenKeyRote = state.meidenKeyRote;
+      renderAnalysis();
+    }
+  });
+  $("#opponentKeyRote").addEventListener("change", (event) => {
+    state.opponentKeyRote = event.target.value;
+    if (state.config) {
+      state.config.opponentKeyRote = state.opponentKeyRote;
+      renderAnalysis();
+    }
+  });
   $("#tabSetup").addEventListener("click", () => switchScreen("setup"));
   $("#tabAnalysis").addEventListener("click", () => {
     startAnalysis();

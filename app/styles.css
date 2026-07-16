@@ -443,6 +443,32 @@ body.analysis-mode .screen.active {
   margin-bottom: 14px;
 }
 
+.key-rote-control {
+  display: inline-grid;
+  grid-template-columns: auto 72px;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  color: var(--gold);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.key-rote-control select {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid rgba(215, 184, 107, 0.34);
+  border-radius: 9px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035)),
+    rgba(8, 5, 18, 0.72);
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
 .compact-team-panel .panel-header {
   margin-bottom: 8px;
 }
@@ -1764,6 +1790,30 @@ body.analysis-mode .rotation-card {
     linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.045)),
     rgba(9, 11, 18, 0.52);
   animation: boardSettle 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+body.analysis-mode .rotation-card.key-rote-home {
+  border-color: rgba(245, 204, 82, 0.98);
+  box-shadow:
+    0 0 0 3px rgba(245, 204, 82, 0.72),
+    0 0 24px rgba(245, 204, 82, 0.34),
+    var(--shadow);
+}
+
+body.analysis-mode .rotation-card.key-rote-away {
+  border-color: rgba(232, 61, 76, 0.98);
+  box-shadow:
+    0 0 0 3px rgba(232, 61, 76, 0.7),
+    0 0 24px rgba(232, 61, 76, 0.32),
+    var(--shadow);
+}
+
+body.analysis-mode .rotation-card.key-rote-home.key-rote-away {
+  box-shadow:
+    0 0 0 3px rgba(245, 204, 82, 0.76),
+    0 0 0 6px rgba(232, 61, 76, 0.7),
+    0 0 26px rgba(245, 204, 82, 0.3),
+    var(--shadow);
 }
 
 body.analysis-mode .mini-court {

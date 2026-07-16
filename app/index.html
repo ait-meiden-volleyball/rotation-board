@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rotation Board Ver1</title>
-    <link rel="stylesheet" href="./styles.css?v=20260716-01" />
+    <link rel="stylesheet" href="./styles.css?v=20260716-02" />
   </head>
   <body>
     <div class="app-shell">
@@ -85,6 +85,18 @@
             <section class="panel home-panel">
               <div class="panel-header">
                 <h3>HOME TEAM</h3>
+                <label class="key-rote-control">
+                  <span>KEY ROTE</span>
+                  <select id="meidenKeyRote">
+                    <option value="">-</option>
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                    <option value="S4">S4</option>
+                    <option value="S5">S5</option>
+                    <option value="S6">S6</option>
+                  </select>
+                </label>
                 <span>max 12</span>
               </div>
               <div class="roster-grid" id="meidenRoster"></div>
@@ -120,6 +132,18 @@
             <section class="panel away-panel">
               <div class="panel-header">
                 <h3>AWAY TEAM</h3>
+                <label class="key-rote-control away-key-rote">
+                  <span>KEY ROTE</span>
+                  <select id="opponentKeyRote">
+                    <option value="">-</option>
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                    <option value="S4">S4</option>
+                    <option value="S5">S5</option>
+                    <option value="S6">S6</option>
+                  </select>
+                </label>
                 <span>max 12</span>
               </div>
               <div class="number-grid" id="opponentInputs"></div>
@@ -228,6 +252,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260716-01"></script>
+    <script src="./app.js?v=20260716-02"></script>
   </body>
 </html>
