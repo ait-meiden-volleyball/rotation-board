@@ -537,15 +537,26 @@ function renderCourtSelects(team, values = registeredIds(team), options = {}) {
   $$(`select[data-team="${team}"]`).forEach((select) => {
     previous[select.dataset.position] = select.value;
   });
-  const selectedInCourt = {};
+  const selectedInCourt = options.court ? { ...options.court } : {};
   const seen = new Set();
-  POSITIONS.forEach((position) => {
-    const value = previous[position];
-    if (playersById[value] && !seen.has(value)) {
-      selectedInCourt[position] = value;
-      seen.add(value);
-    }
-  });
+  if (!options.court) {
+    POSITIONS.forEach((position) => {
+      const value = previous[position];
+      if (playersById[value] && !seen.has(value)) {
+        selectedInCourt[position] = value;
+        seen.add(value);
+      }
+    });
+  } else {
+    POSITIONS.forEach((position) => {
+      const value = selectedInCourt[position];
+      if (!playersById[value] || seen.has(value)) {
+        delete selectedInCourt[position];
+      } else {
+        seen.add(value);
+      }
+    });
+  }
   const mapping =
     team === "opponent"
       ? [
@@ -600,17 +611,38 @@ function renderCourtSelects(team, values = registeredIds(team), options = {}) {
 function setDefaultCourt(team) {
   const defaults = DEFAULT_SETUP[team];
   state.manualCourtInput[team] = true;
-  renderCourtSelects(team, [], { autofill: false });
-  Object.entries(defaults.court).forEach(([position, value]) => {
-    const select = $(`select[data-team="${team}"][data-position="${position}"]`);
-    if (select) select.value = value;
-  });
   if (team === "opponent") {
     state.selectedOpponent = new Set(Object.values(defaults.court));
   } else {
     state.selectedMeiden = new Set(Object.values(defaults.court));
   }
-  renderCourtSelects(team, Object.values(defaults.court), { autofill: false });
+  renderCourtSelects(team, Object.values(defaults.court), { autofill: false, court: defaults.court });
+}
+
+function clearTeamRoles(team) {
+  if (team === "opponent") {
+    state.selectedOpponent = new Set();
+    state.opponentAces = new Set();
+    state.opponentBlockers = new Set();
+    state.opponentSetter = "";
+    state.opponentOffset = 0;
+  } else {
+    state.selectedMeiden = new Set();
+    state.meidenAces = new Set();
+    state.meidenBlockers = new Set();
+    state.meidenSetter = "";
+    state.meidenOffset = 0;
+  }
+}
+
+function clearStartRotation(team) {
+  state.manualCourtInput[team] = true;
+  if (team === "opponent") {
+    state.selectedOpponent = new Set();
+  } else {
+    state.selectedMeiden = new Set();
+  }
+  renderCourtSelects(team, registeredIds(team), { autofill: false, court: {} });
 }
 
 function applyTeamDefaults(team) {
@@ -629,7 +661,10 @@ function applyTeamDefaults(team) {
 }
 
 function resetStartRotation(team) {
-  setDefaultCourt(team);
+  clearStartRotation(team);
+  state.config = null;
+  $("#setupError").textContent = "";
+  $("#rotationCards").innerHTML = "";
 }
 
 function resetTeamSetup(team) {
@@ -637,7 +672,17 @@ function resetTeamSetup(team) {
   const teamLabel = isOpponent ? "AWAY TEAM" : "HOME TEAM";
   if (!window.confirm(`${teamLabel}の入力内容をリセットしますか？`)) return;
 
-  applyTeamDefaults(team);
+  setTeamName(team, "");
+  setTeamInputs(team, []);
+  clearTeamRoles(team);
+  state.config = null;
+  state.manualCourtInput[team] = true;
+  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
+  if (team === "opponent") refreshOpponentSelects();
+  else refreshMeidenSelects();
+  clearStartRotation(team);
+  $("#setupError").textContent = "";
+  $("#rotationCards").innerHTML = "";
 }
 
 function readCourt(team) {
