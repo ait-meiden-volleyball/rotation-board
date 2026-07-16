@@ -840,6 +840,10 @@ function renderCard(index, config) {
   ]
     .filter(Boolean)
     .join(" ");
+  const keyRoteFrames = [
+    highlightClasses.includes("key-rote-away") ? '<div class="key-rote-frame key-rote-frame-away" aria-hidden="true"></div>' : "",
+    highlightClasses.includes("key-rote-home") ? '<div class="key-rote-frame key-rote-frame-home" aria-hidden="true"></div>' : "",
+  ].join("");
   const serveSide = state.serveMarkerSide;
   const serveMarker =
     index === 0
@@ -852,6 +856,7 @@ function renderCard(index, config) {
         <h3>${setterZoneLabel}</h3>
       </div>
       <div class="mini-court">
+        ${keyRoteFrames}
         ${serveMarker}
         <div class="side-label opponent">${config.opponentTeamName}</div>
         <div class="court-row back">${rowValues(opponentRotation, BACK).map((value) => token(value, "opponent", config)).join("")}</div>
