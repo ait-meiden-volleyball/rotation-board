@@ -1825,10 +1825,10 @@ body.analysis-mode .key-rote-frame-away {
 body.analysis-mode .key-rote-frame-home {
   top: calc(50% + 11px);
   bottom: 9px;
-  border-color: rgba(12, 31, 86, 0.98);
+  border-color: rgba(112, 65, 210, 0.98);
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.24),
-    0 0 16px rgba(12, 31, 86, 0.42);
+    0 0 16px rgba(112, 65, 210, 0.46);
 }
 
 body.analysis-mode .mini-court::before {
