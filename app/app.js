@@ -219,8 +219,10 @@ function defaultPlayersFor(team) {
 
 function setTeamName(team, value) {
   const input = team === "opponent" ? $("#opponentTeamName") : $("#homeTeamName");
+  const mobileInput = team === "opponent" ? $("#mobileOpponentTeamName") : $("#mobileHomeTeamName");
   const label = team === "opponent" ? $("#setupOpponentCourtLabel") : $("#setupHomeCourtLabel");
   input.value = value;
+  if (mobileInput) mobileInput.value = value;
   label.textContent = value || (team === "opponent" ? "AWAY TEAM" : "HOME TEAM");
 }
 
@@ -906,8 +908,20 @@ function bindEvents() {
     $("#setupHomeCourtLabel").textContent = $("#homeTeamName").value.trim() || "HOME TEAM";
     $("#setupOpponentCourtLabel").textContent = $("#opponentTeamName").value.trim() || "AWAY TEAM";
   };
-  $("#homeTeamName").addEventListener("input", syncTeamLabels);
-  $("#opponentTeamName").addEventListener("input", syncTeamLabels);
+  const bindTeamNamePair = (primarySelector, mobileSelector) => {
+    const primary = $(primarySelector);
+    const mobile = $(mobileSelector);
+    primary.addEventListener("input", () => {
+      if (mobile) mobile.value = primary.value;
+      syncTeamLabels();
+    });
+    mobile?.addEventListener("input", () => {
+      primary.value = mobile.value;
+      syncTeamLabels();
+    });
+  };
+  bindTeamNamePair("#homeTeamName", "#mobileHomeTeamName");
+  bindTeamNamePair("#opponentTeamName", "#mobileOpponentTeamName");
   $("#meidenKeyRote").addEventListener("change", (event) => {
     state.meidenKeyRote = event.target.value;
     if (state.config) {
@@ -932,6 +946,8 @@ function bindEvents() {
   });
   $("#resetHomeSetup").addEventListener("click", () => resetTeamSetup("meiden"));
   $("#resetAwaySetup").addEventListener("click", () => resetTeamSetup("opponent"));
+  $("#mobileResetHomeSetup")?.addEventListener("click", () => resetTeamSetup("meiden"));
+  $("#mobileResetAwaySetup")?.addEventListener("click", () => resetTeamSetup("opponent"));
   $("#resetOpponentRotation").addEventListener("click", () => resetStartRotation("opponent"));
   $("#resetMeidenRotation").addEventListener("click", () => resetStartRotation("meiden"));
   $("#aceDropdown").addEventListener("click", () => toggleMultiSelect("acePicker"));

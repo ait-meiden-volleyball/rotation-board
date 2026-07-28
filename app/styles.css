@@ -434,6 +434,10 @@ body.analysis-mode .screen.active {
   padding: 10px 12px;
 }
 
+.mobile-team-controls {
+  display: none;
+}
+
 .panel-header,
 .card-header {
   display: flex;
@@ -1638,6 +1642,24 @@ body.analysis-mode .screen.active {
     grid-template-columns: 1fr;
   }
 
+  .team-panel {
+    display: none;
+  }
+
+  .mobile-team-controls {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .mobile-team-controls label {
+    display: grid;
+    gap: 6px;
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 950;
+  }
+
   .setup-reset-button {
     width: 100%;
   }
@@ -1657,10 +1679,45 @@ body.analysis-mode .screen.active {
 
   .setup-grid {
     grid-template-areas:
-      "teams"
       "home"
+      "homeRotation"
       "away"
-      "rotation";
+      "awayRotation"
+      "serve";
+  }
+
+  .rotation-panel,
+  .court-setup {
+    display: contents;
+  }
+
+  .rotation-panel > .panel-header,
+  .setup-net {
+    display: none;
+  }
+
+  .home-rotation-side,
+  .away-rotation-side,
+  .serve-choice {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(33, 17, 58, 0.92);
+    box-shadow: var(--shadow);
+  }
+
+  .home-rotation-side {
+    grid-area: homeRotation;
+    padding: 16px;
+  }
+
+  .away-rotation-side {
+    grid-area: awayRotation;
+    padding: 16px;
+  }
+
+  .serve-choice {
+    grid-area: serve;
+    padding: 12px;
   }
 
   .screen-tabs,

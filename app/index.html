@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rotation Board Ver1</title>
-    <link rel="stylesheet" href="./styles.css?v=20260716-05" />
+    <link rel="stylesheet" href="./styles.css?v=20260728-01" />
   </head>
   <body>
     <div class="app-shell">
@@ -83,6 +83,13 @@
             </section>
 
             <section class="panel home-panel">
+              <div class="mobile-team-controls">
+                <label>
+                  <span>HOME TEAM</span>
+                  <input id="mobileHomeTeamName" class="text-input" type="text" value="名電" placeholder="HOME TEAM" />
+                </label>
+                <button id="mobileResetHomeSetup" class="setup-reset-button team-reset-button" type="button">HOME RESET</button>
+              </div>
               <div class="panel-header">
                 <h3>HOME TEAM</h3>
                 <label class="key-rote-control">
@@ -130,6 +137,13 @@
             </section>
 
             <section class="panel away-panel">
+              <div class="mobile-team-controls">
+                <label>
+                  <span>AWAY TEAM</span>
+                  <input id="mobileOpponentTeamName" class="text-input" type="text" value="星城" placeholder="AWAY TEAM" />
+                </label>
+                <button id="mobileResetAwaySetup" class="setup-reset-button team-reset-button" type="button">AWAY RESET</button>
+              </div>
               <div class="panel-header">
                 <h3>AWAY TEAM</h3>
                 <label class="key-rote-control away-key-rote">
@@ -181,7 +195,7 @@
                 <h3>START ROTATION</h3>
               </div>
               <div class="court-setup">
-                <div>
+                <div class="rotation-side away-rotation-side">
                   <div class="court-title-row">
                     <div id="setupOpponentCourtLabel" class="court-label">星城</div>
                     <button id="resetOpponentRotation" class="reset-rotation-button" type="button">RESET</button>
@@ -192,7 +206,7 @@
                   <div class="court-row front" id="opponentFrontRow"></div>
                 </div>
                 <div class="net setup-net" aria-label="Net"></div>
-                <div>
+                <div class="rotation-side home-rotation-side">
                   <div class="court-title-row">
                     <div id="setupHomeCourtLabel" class="court-label">名電</div>
                     <button id="resetMeidenRotation" class="reset-rotation-button" type="button">RESET</button>
@@ -252,6 +266,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260716-05"></script>
+    <script src="./app.js?v=20260728-01"></script>
   </body>
 </html>
