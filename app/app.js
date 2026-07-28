@@ -84,9 +84,11 @@ const state = {
   opponentKeyRote: "",
   meidenKeyRote: "",
   config: null,
+  rotationProgressInitialized: false,
   meidenOffset: 0,
   opponentOffset: 0,
   serveMarkerSide: "meiden",
+  serveStep: 0,
   manualCourtInput: {
     opponent: false,
     meiden: false,
@@ -95,6 +97,7 @@ const state = {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+const ROTATION_PROGRESS_KEY = "rotationBoardProgressV1";
 
 function normalizeOffset(value) {
   return ((value % 6) + 6) % 6;
@@ -105,6 +108,76 @@ function signedOffset(value) {
   if (normalized === 0) return "±0";
   if (normalized <= 3) return `+${normalized}`;
   return `-${6 - normalized}`;
+}
+
+function saveRotationProgress() {
+  try {
+    localStorage.setItem(
+      ROTATION_PROGRESS_KEY,
+      JSON.stringify({
+        homeRotationOffset: state.meidenOffset,
+        awayRotationOffset: state.opponentOffset,
+        serveTeam: state.serveMarkerSide,
+        serveStep: state.serveStep,
+        rotationProgressInitialized: state.rotationProgressInitialized,
+      }),
+    );
+  } catch {
+    // localStorage may be unavailable in private browsing or restricted embeds.
+  }
+}
+
+function restoreRotationProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ROTATION_PROGRESS_KEY) || "null");
+    if (!saved || typeof saved !== "object") return;
+    const homeOffset = saved.homeRotationOffset ?? saved.meidenOffset;
+    const awayOffset = saved.awayRotationOffset ?? saved.opponentOffset;
+    const serveTeam = saved.serveTeam ?? saved.serveMarkerSide;
+    const hasSavedProgress =
+      Number.isFinite(homeOffset) ||
+      Number.isFinite(awayOffset) ||
+      serveTeam === "meiden" ||
+      serveTeam === "opponent" ||
+      Number.isFinite(saved.serveStep);
+    if (Number.isFinite(homeOffset)) state.meidenOffset = homeOffset;
+    if (Number.isFinite(awayOffset)) state.opponentOffset = awayOffset;
+    if (serveTeam === "meiden" || serveTeam === "opponent") {
+      state.serveMarkerSide = serveTeam;
+    }
+    if (Number.isFinite(saved.serveStep)) state.serveStep = saved.serveStep;
+    state.rotationProgressInitialized = Boolean(saved.rotationProgressInitialized ?? saved.hasStartedAnalysis ?? hasSavedProgress);
+  } catch {
+    // Ignore corrupt saved progress and continue with defaults.
+  }
+}
+
+function clearRotationProgress() {
+  state.config = null;
+  state.rotationProgressInitialized = false;
+  state.meidenOffset = 0;
+  state.opponentOffset = 0;
+  state.serveMarkerSide = $("input[name='serveStart']:checked")?.value || "meiden";
+  state.serveStep = 0;
+  try {
+    localStorage.removeItem(ROTATION_PROGRESS_KEY);
+  } catch {
+    // localStorage may be unavailable in private browsing or restricted embeds.
+  }
+}
+
+function initializeRotationProgress(serveTeam) {
+  state.meidenOffset = 0;
+  state.opponentOffset = 0;
+  state.serveMarkerSide = serveTeam;
+  state.serveStep = 0;
+  state.rotationProgressInitialized = true;
+  saveRotationProgress();
+}
+
+function markRotationProgressChanged() {
+  state.rotationProgressInitialized = true;
+  saveRotationProgress();
 }
 
 function startRotationLabel(value) {
@@ -597,6 +670,7 @@ function renderCourtSelects(team, values = registeredIds(team), options = {}) {
         .forEach((player) => select.append(createOption(player.id, player.label)));
       select.value = playersById[currentValue] ? currentValue : "";
       select.addEventListener("change", () => {
+        clearRotationProgress();
         renderCourtSelects(team);
       });
       slot.append(select);
@@ -659,6 +733,7 @@ function applyTeamDefaults(team) {
   setTeamInputs(team, defaultPlayersFor(team));
   setDefaultRoles(team);
   state.config = null;
+  state.rotationProgressInitialized = false;
   state.manualCourtInput[team] = true;
   $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
   if (team === "opponent") refreshOpponentSelects();
@@ -670,7 +745,7 @@ function applyTeamDefaults(team) {
 
 function resetStartRotation(team) {
   clearStartRotation(team);
-  state.config = null;
+  clearRotationProgress();
   $("#setupError").textContent = "";
   $("#rotationCards").innerHTML = "";
 }
@@ -683,7 +758,7 @@ function resetTeamSetup(team) {
   setTeamName(team, "");
   setTeamInputs(team, []);
   clearTeamRoles(team);
-  state.config = null;
+  clearRotationProgress();
   state.manualCourtInput[team] = true;
   $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
   if (team === "opponent") refreshOpponentSelects();
@@ -749,6 +824,7 @@ function startAnalysis() {
   $("#setupError").textContent = error;
   if (error) return;
 
+  const shouldInitializeRotation = !state.rotationProgressInitialized;
   state.config = {
     homeTeamName: $("#homeTeamName").value.trim() || "HOME TEAM",
     opponentTeamName: $("#opponentTeamName").value.trim() || "AWAY TEAM",
@@ -766,9 +842,9 @@ function startAnalysis() {
     meidenCourt: readCourt("meiden"),
     serveStart: $("input[name='serveStart']:checked").value,
   };
-  state.meidenOffset = 0;
-  state.opponentOffset = 0;
-  state.serveMarkerSide = state.config.serveStart;
+  if (shouldInitializeRotation) {
+    initializeRotationProgress(state.config.serveStart);
+  }
   renderAnalysis();
   switchScreen("analysis");
 }
@@ -889,6 +965,8 @@ function moveServeNext() {
   state.serveMarkerSide = state.serveMarkerSide === "meiden" ? "opponent" : "meiden";
   if (state.serveMarkerSide === "opponent") state.opponentOffset += 1;
   else state.meidenOffset += 1;
+  state.serveStep += 1;
+  markRotationProgressChanged();
   renderAnalysis();
 }
 
@@ -900,6 +978,8 @@ function moveServeBack() {
     state.opponentOffset -= 1;
     state.serveMarkerSide = "meiden";
   }
+  state.serveStep -= 1;
+  markRotationProgressChanged();
   renderAnalysis();
 }
 
@@ -956,6 +1036,12 @@ function bindEvents() {
   $("#meidenBlockerDropdown").addEventListener("click", () => toggleMultiSelect("meidenBlockerPicker"));
   $("#opponentSetterDropdown").addEventListener("click", () => toggleMultiSelect("opponentSetterPicker"));
   $("#meidenSetterDropdown").addEventListener("click", () => toggleMultiSelect("meidenSetterPicker"));
+  $$('input[name="serveStart"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      clearRotationProgress();
+      $("#rotationCards").innerHTML = "";
+    });
+  });
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".multi-select")) {
       $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
@@ -977,18 +1063,22 @@ function bindEvents() {
   });
   $("#meidenPlus").addEventListener("click", () => {
     state.meidenOffset += 1;
+    markRotationProgressChanged();
     renderAnalysis();
   });
   $("#meidenMinus").addEventListener("click", () => {
     state.meidenOffset -= 1;
+    markRotationProgressChanged();
     renderAnalysis();
   });
   $("#opponentPlus").addEventListener("click", () => {
     state.opponentOffset += 1;
+    markRotationProgressChanged();
     renderAnalysis();
   });
   $("#opponentMinus").addEventListener("click", () => {
     state.opponentOffset -= 1;
+    markRotationProgressChanged();
     renderAnalysis();
   });
   $("#serveNext").addEventListener("click", moveServeNext);
@@ -1005,6 +1095,7 @@ function init() {
   buildRoster();
   applyTeamDefaults("opponent");
   applyTeamDefaults("meiden");
+  restoreRotationProgress();
   bindEvents();
 }
 
