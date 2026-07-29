@@ -89,6 +89,7 @@ const state = {
   opponentOffset: 0,
   serveMarkerSide: "meiden",
   serveStep: 0,
+  setupPersistenceReady: false,
   manualCourtInput: {
     opponent: false,
     meiden: false,
@@ -98,6 +99,8 @@ const state = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const ROTATION_PROGRESS_KEY = "rotationBoardProgressV1";
+const SETUP_STATE_KEY = "rotationBoardSetupV1";
+const MAX_NAME_LINES = 3;
 
 function normalizeOffset(value) {
   return ((value % 6) + 6) % 6;
@@ -180,6 +183,202 @@ function markRotationProgressChanged() {
   saveRotationProgress();
 }
 
+function sanitizePlayerName(value) {
+  return value.replace(/\r\n?/g, "\n").split("\n").slice(0, MAX_NAME_LINES).join("\n");
+}
+
+function canInsertNameLineBreak(input) {
+  const value = input.value.replace(/\r\n?/g, "\n");
+  const selectionStart = input.selectionStart ?? value.length;
+  const selectionEnd = input.selectionEnd ?? selectionStart;
+  const selectedText = value.slice(selectionStart, selectionEnd);
+  const selectedLineBreaks = (selectedText.match(/\n/g) || []).length;
+  const currentLineBreaks = (value.match(/\n/g) || []).length;
+  return currentLineBreaks - selectedLineBreaks < MAX_NAME_LINES - 1;
+}
+
+function insertNameLineBreak(input, refresh) {
+  if (!canInsertNameLineBreak(input)) return;
+  const selectionStart = input.selectionStart ?? input.value.length;
+  const selectionEnd = input.selectionEnd ?? selectionStart;
+  if (typeof input.setRangeText === "function") {
+    input.setRangeText("\n", selectionStart, selectionEnd, "end");
+  } else {
+    input.value = `${input.value.slice(0, selectionStart)}\n${input.value.slice(selectionEnd)}`;
+    input.selectionStart = input.selectionEnd = selectionStart + 1;
+  }
+  input.value = sanitizePlayerName(input.value);
+  refresh();
+}
+
+function bindNameInput(input, refresh) {
+  let enterHandled = false;
+  let enterResetTimer = 0;
+  const handleEnter = (event) => {
+    event.preventDefault();
+    if (!enterHandled) {
+      insertNameLineBreak(input, refresh);
+      enterHandled = true;
+      window.clearTimeout(enterResetTimer);
+      enterResetTimer = window.setTimeout(() => {
+        enterHandled = false;
+      }, 0);
+    }
+  };
+
+  input.addEventListener("beforeinput", (event) => {
+    if (event.inputType === "insertLineBreak" || event.inputType === "insertParagraph" || event.data === "\n") {
+      handleEnter(event);
+    }
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.isComposing) return;
+    handleEnter(event);
+  });
+  input.addEventListener("keypress", (event) => {
+    if (event.key !== "Enter" || event.isComposing) return;
+    handleEnter(event);
+  });
+  input.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+      enterHandled = false;
+    }
+  });
+  input.addEventListener("input", () => {
+    enterHandled = false;
+    const limited = sanitizePlayerName(input.value);
+    if (input.value !== limited) input.value = limited;
+    refresh();
+  });
+}
+
+function createNameTextarea(value, ariaLabel, refresh) {
+  const input = document.createElement("textarea");
+  input.value = sanitizePlayerName(value || "");
+  input.placeholder = "Name";
+  input.rows = MAX_NAME_LINES;
+  input.enterKeyHint = "enter";
+  input.inputMode = "text";
+  input.wrap = "soft";
+  input.ariaLabel = ariaLabel;
+  input.dataset.field = "name";
+  bindNameInput(input, refresh);
+  return input;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function multilineNameHtml(value) {
+  const lines = sanitizePlayerName(value || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.map((line) => `<span>${escapeHtml(line)}</span>`).join("");
+}
+
+function teamInputData(team) {
+  const selector = team === "opponent" ? "#opponentInputs .role-player-card" : "#meidenRoster .role-player-card";
+  return $$(selector).map((card) => ({
+    name: sanitizePlayerName(card.querySelector('[data-field="name"]')?.value || ""),
+    number: normalizeNumberText(card.querySelector('input[data-field="number"]')?.value || ""),
+  }));
+}
+
+function courtData(team) {
+  const court = {};
+  $$(`select[data-team="${team}"]`).forEach((select) => {
+    court[select.dataset.position] = select.value;
+  });
+  return court;
+}
+
+function saveSetupState() {
+  if (!state.setupPersistenceReady) return;
+  try {
+    localStorage.setItem(
+      SETUP_STATE_KEY,
+      JSON.stringify({
+        teamNames: {
+          meiden: $("#homeTeamName")?.value || "",
+          opponent: $("#opponentTeamName")?.value || "",
+        },
+        players: {
+          meiden: teamInputData("meiden"),
+          opponent: teamInputData("opponent"),
+        },
+        selected: {
+          meiden: Array.from(state.selectedMeiden),
+          opponent: Array.from(state.selectedOpponent),
+        },
+        roles: {
+          meidenAces: Array.from(state.meidenAces),
+          meidenBlockers: Array.from(state.meidenBlockers),
+          opponentAces: Array.from(state.opponentAces),
+          opponentBlockers: Array.from(state.opponentBlockers),
+          meidenSetter: state.meidenSetter,
+          opponentSetter: state.opponentSetter,
+          meidenKeyRote: state.meidenKeyRote,
+          opponentKeyRote: state.opponentKeyRote,
+        },
+        court: {
+          meiden: courtData("meiden"),
+          opponent: courtData("opponent"),
+        },
+        serveStart: $("input[name='serveStart']:checked")?.value || "opponent",
+      }),
+    );
+  } catch {
+    // localStorage may be unavailable in private browsing or restricted embeds.
+  }
+}
+
+function restoreSetupState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETUP_STATE_KEY) || "null");
+    if (!saved || typeof saved !== "object") return;
+
+    setTeamName("meiden", saved.teamNames?.meiden || "");
+    setTeamName("opponent", saved.teamNames?.opponent || "");
+    if (Array.isArray(saved.players?.meiden)) setTeamInputs("meiden", saved.players.meiden);
+    if (Array.isArray(saved.players?.opponent)) setTeamInputs("opponent", saved.players.opponent);
+
+    state.selectedMeiden = new Set(Array.isArray(saved.selected?.meiden) ? saved.selected.meiden : []);
+    state.selectedOpponent = new Set(Array.isArray(saved.selected?.opponent) ? saved.selected.opponent : []);
+    state.meidenAces = new Set(Array.isArray(saved.roles?.meidenAces) ? saved.roles.meidenAces : []);
+    state.meidenBlockers = new Set(Array.isArray(saved.roles?.meidenBlockers) ? saved.roles.meidenBlockers : []);
+    state.opponentAces = new Set(Array.isArray(saved.roles?.opponentAces) ? saved.roles.opponentAces : []);
+    state.opponentBlockers = new Set(Array.isArray(saved.roles?.opponentBlockers) ? saved.roles.opponentBlockers : []);
+    state.meidenSetter = saved.roles?.meidenSetter || "";
+    state.opponentSetter = saved.roles?.opponentSetter || "";
+    state.meidenKeyRote = saved.roles?.meidenKeyRote || "";
+    state.opponentKeyRote = saved.roles?.opponentKeyRote || "";
+    $("#meidenKeyRote").value = state.meidenKeyRote;
+    $("#opponentKeyRote").value = state.opponentKeyRote;
+
+    if (saved.serveStart === "meiden" || saved.serveStart === "opponent") {
+      const serveRadio = $(`input[name="serveStart"][value="${saved.serveStart}"]`);
+      if (serveRadio) serveRadio.checked = true;
+    }
+
+    refreshOpponentSelects();
+    refreshMeidenSelects();
+    if (saved.court?.opponent) renderCourtSelects("opponent", Object.values(saved.court.opponent), { autofill: false, court: saved.court.opponent });
+    if (saved.court?.meiden) renderCourtSelects("meiden", Object.values(saved.court.meiden), { autofill: false, court: saved.court.meiden });
+    renderRoleSelects();
+    updateRoleCards("opponent");
+    updateRoleCards("meiden");
+  } catch {
+    // Ignore corrupt saved setup state and continue with defaults.
+  }
+}
+
 function startRotationLabel(value) {
   return `R${normalizeOffset(value) + 1}`;
 }
@@ -226,13 +425,7 @@ function buildOpponentInputs() {
     const tile = document.createElement("div");
     tile.className = "role-player-card";
     tile.dataset.playerId = id;
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.value = player.name;
-    nameInput.placeholder = "Name";
-    nameInput.ariaLabel = `相手選手名${index + 1}`;
-    nameInput.dataset.field = "name";
-    nameInput.addEventListener("input", refreshOpponentSelects);
+    const nameInput = createNameTextarea(player.name, `相手選手名${index + 1}`, refreshOpponentSelects);
     const numberInput = document.createElement("input");
     numberInput.type = "text";
     numberInput.inputMode = "numeric";
@@ -245,7 +438,7 @@ function buildOpponentInputs() {
     bindUniqueNumberInput("opponent", numberInput, refreshOpponentSelects);
     tile.append(nameInput, numberInput);
     tile.addEventListener("click", (event) => {
-      if (event.target.tagName === "INPUT") return;
+      if (event.target.matches("input, textarea")) return;
       toggleStarter("opponent", id);
     });
     wrapper.append(tile);
@@ -260,13 +453,7 @@ function buildRoster() {
     const tile = document.createElement("div");
     tile.className = "role-player-card";
     tile.dataset.playerId = id;
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.value = player.name;
-    nameInput.placeholder = "Name";
-    nameInput.ariaLabel = `自チーム選手名${index + 1}`;
-    nameInput.dataset.field = "name";
-    nameInput.addEventListener("input", refreshMeidenSelects);
+    const nameInput = createNameTextarea(player.name, `自チーム選手名${index + 1}`, refreshMeidenSelects);
     const numberInput = document.createElement("input");
     numberInput.type = "text";
     numberInput.inputMode = "numeric";
@@ -279,7 +466,7 @@ function buildRoster() {
     bindUniqueNumberInput("meiden", numberInput, refreshMeidenSelects);
     tile.append(nameInput, numberInput);
     tile.addEventListener("click", (event) => {
-      if (event.target.tagName === "INPUT") return;
+      if (event.target.matches("input, textarea")) return;
       toggleStarter("meiden", id);
     });
     wrapper.append(tile);
@@ -303,9 +490,9 @@ function setTeamInputs(team, players) {
   const selector = team === "opponent" ? "#opponentInputs .role-player-card" : "#meidenRoster .role-player-card";
   $$(selector).forEach((card, index) => {
     const player = players[index] || { name: "", number: "" };
-    const nameInput = card.querySelector('input[data-field="name"]');
+    const nameInput = card.querySelector('[data-field="name"]');
     const numberInput = card.querySelector('input[data-field="number"]');
-    nameInput.value = player.name;
+    nameInput.value = sanitizePlayerName(player.name || "");
     numberInput.value = player.number;
     numberInput.dataset.previousNumber = player.number;
   });
@@ -371,7 +558,9 @@ function getPlayers(team) {
   return $$(selector)
     .map((card) => {
       const id = card.dataset.playerId;
-      const name = card.querySelector('input[data-field="name"]').value.trim();
+      const nameInput = card.querySelector('[data-field="name"]');
+      const name = sanitizePlayerName(nameInput.value);
+      if (nameInput.value !== name) nameInput.value = name;
       const numberInput = card.querySelector('input[data-field="number"]');
       const number = normalizeNumberText(numberInput.value);
       if (numberInput.value !== number) numberInput.value = number;
@@ -382,12 +571,13 @@ function getPlayers(team) {
         label: playerLabel({ name, number }),
       };
     })
-    .filter((player) => player.name || player.number);
+    .filter((player) => player.name.trim() || player.number);
 }
 
 function playerLabel(player) {
-  if (player.name && player.number) return `${player.name} ${player.number}`;
-  return player.name || player.number || "";
+  const name = sanitizePlayerName(player.name || "").trim().replace(/\n/g, " / ");
+  if (name && player.number) return `${name} ${player.number}`;
+  return name || player.number || "";
 }
 
 function playerMap(team) {
@@ -563,6 +753,7 @@ function refreshOpponentSelects() {
   renderRoleSelects();
   updateRoleCards("opponent");
   renderCourtSelects("opponent", getOpponentStarters());
+  saveSetupState();
 }
 
 function refreshMeidenSelects() {
@@ -572,6 +763,7 @@ function refreshMeidenSelects() {
   renderRoleSelects();
   updateRoleCards("meiden");
   renderCourtSelects("meiden", getMeidenPlayers());
+  saveSetupState();
 }
 
 function toggleStarter(team, value) {
@@ -672,6 +864,7 @@ function renderCourtSelects(team, values = registeredIds(team), options = {}) {
       select.addEventListener("change", () => {
         clearRotationProgress();
         renderCourtSelects(team);
+        saveSetupState();
       });
       slot.append(select);
       wrapper.append(slot);
@@ -741,6 +934,7 @@ function applyTeamDefaults(team) {
   setDefaultCourt(team);
   $("#setupError").textContent = "";
   $("#rotationCards").innerHTML = "";
+  saveSetupState();
 }
 
 function resetStartRotation(team) {
@@ -748,6 +942,7 @@ function resetStartRotation(team) {
   clearRotationProgress();
   $("#setupError").textContent = "";
   $("#rotationCards").innerHTML = "";
+  saveSetupState();
 }
 
 function resetTeamSetup(team) {
@@ -766,6 +961,7 @@ function resetTeamSetup(team) {
   clearStartRotation(team);
   $("#setupError").textContent = "";
   $("#rotationCards").innerHTML = "";
+  saveSetupState();
 }
 
 function readCourt(team) {
@@ -862,11 +1058,14 @@ function tokenRole(value, team, config) {
 function token(value, team, config) {
   const players = team === "opponent" ? config.opponentPlayers : config.meidenPlayers;
   const player = players[value] || { name: "", number: "", label: value };
+  const nameHtml = multilineNameHtml(player.name);
+  const numberHtml = escapeHtml(player.number || "");
+  const labelHtml = player.name ? nameHtml : escapeHtml(player.label || "");
   return `
     <div class="player-token role-${tokenRole(value, team, config)}">
       ${player.name && player.number
-        ? `<span class="token-number">${player.number}</span><span class="token-name">${player.name}</span>`
-        : `<strong>${player.label}</strong>`}
+        ? `<span class="token-number">${numberHtml}</span><span class="token-name">${nameHtml}</span>`
+        : `<strong class="${player.name ? "token-name-only" : ""}">${labelHtml}</strong>`}
     </div>
   `;
 }
@@ -994,16 +1193,19 @@ function bindEvents() {
     primary.addEventListener("input", () => {
       if (mobile) mobile.value = primary.value;
       syncTeamLabels();
+      saveSetupState();
     });
     mobile?.addEventListener("input", () => {
       primary.value = mobile.value;
       syncTeamLabels();
+      saveSetupState();
     });
   };
   bindTeamNamePair("#homeTeamName", "#mobileHomeTeamName");
   bindTeamNamePair("#opponentTeamName", "#mobileOpponentTeamName");
   $("#meidenKeyRote").addEventListener("change", (event) => {
     state.meidenKeyRote = event.target.value;
+    saveSetupState();
     if (state.config) {
       state.config.meidenKeyRote = state.meidenKeyRote;
       renderAnalysis();
@@ -1011,6 +1213,7 @@ function bindEvents() {
   });
   $("#opponentKeyRote").addEventListener("change", (event) => {
     state.opponentKeyRote = event.target.value;
+    saveSetupState();
     if (state.config) {
       state.config.opponentKeyRote = state.opponentKeyRote;
       renderAnalysis();
@@ -1040,6 +1243,7 @@ function bindEvents() {
     radio.addEventListener("change", () => {
       clearRotationProgress();
       $("#rotationCards").innerHTML = "";
+      saveSetupState();
     });
   });
   document.addEventListener("click", (event) => {
@@ -1095,7 +1299,9 @@ function init() {
   buildRoster();
   applyTeamDefaults("opponent");
   applyTeamDefaults("meiden");
+  restoreSetupState();
   restoreRotationProgress();
+  state.setupPersistenceReady = true;
   bindEvents();
 }
 
