@@ -10,68 +10,74 @@ const POSITION_LABELS = {
   frontRight: "前右",
 };
 
-const HOME_TEAM_DEFAULT = "名電";
-const AWAY_TEAM_DEFAULT = "星城";
-const defaultOpponentPlayers = [
-  { name: "柏崎", number: "1" },
-  { name: "石田", number: "2" },
-  { name: "", number: "3" },
-  { name: "辻", number: "4" },
-  { name: "内藤", number: "5" },
-  { name: "竹川", number: "6" },
-  { name: "北田", number: "7" },
-  { name: "Name", number: "8" },
-  { name: "Name", number: "9" },
-  { name: "Name", number: "10" },
-  { name: "Name", number: "11" },
-  { name: "横江", number: "13" },
-];
-const roster = [
-  { name: "立石", number: "1" },
-  { name: "渡邊", number: "2" },
-  { name: "堀江", number: "3" },
-  { name: "山崎", number: "4" },
-  { name: "片桐", number: "5" },
-  { name: "福島", number: "6" },
-  { name: "山本", number: "7" },
-  { name: "北川", number: "8" },
-  { name: "植木", number: "9" },
-  { name: "金田", number: "10" },
-  { name: "中島", number: "11" },
-  { name: "松田", number: "12" },
-];
-const DEFAULT_SETUP = {
-  opponent: {
-    teamName: AWAY_TEAM_DEFAULT,
-    selected: ["opponent-3", "opponent-0", "opponent-4", "opponent-11", "opponent-1", "opponent-5"],
-    aces: ["opponent-0"],
-    blockers: ["opponent-1"],
-    setter: "opponent-3",
-    court: {
-      backLeft: "opponent-3",
-      backCenter: "opponent-0",
-      backRight: "opponent-4",
-      frontLeft: "opponent-11",
-      frontCenter: "opponent-1",
-      frontRight: "opponent-5",
+const DEFAULT_DATA = {
+  serveStart: "opponent",
+  teams: {
+    meiden: {
+      teamName: "清風",
+      players: [
+        { name: "澤田\nL", number: "1" },
+        { name: "石川\nMB\nJ", number: "2" },
+        { name: "田原\nMB\nJ", number: "3" },
+        { name: "西村\nOH\nJ", number: "4" },
+        { name: "伊藤\nOP\nJ", number: "5" },
+        { name: "森田\nS\nJF", number: "6" },
+        { name: "池ノ上\nMB\nJF", number: "7" },
+        { name: "森脇\nMB\nHB", number: "8" },
+        { name: "出口\nOH\nJF", number: "9" },
+        { name: "田中\nOH\nJF", number: "10" },
+        { name: "", number: "" },
+        { name: "", number: "" },
+      ],
+      selected: ["meiden-4", "meiden-1", "meiden-9", "meiden-3", "meiden-2", "meiden-5"],
+      aces: ["meiden-3"],
+      blockers: ["meiden-2"],
+      setter: "meiden-5",
+      keyRote: "",
+      court: {
+        frontLeft: "meiden-4",
+        frontCenter: "meiden-1",
+        frontRight: "meiden-9",
+        backLeft: "meiden-3",
+        backCenter: "meiden-2",
+        backRight: "meiden-5",
+      },
     },
-  },
-  meiden: {
-    teamName: HOME_TEAM_DEFAULT,
-    selected: ["meiden-1", "meiden-2", "meiden-7", "meiden-5", "meiden-3", "meiden-4"],
-    aces: [],
-    blockers: ["meiden-5"],
-    setter: "meiden-4",
-    court: {
-      frontLeft: "meiden-1",
-      frontCenter: "meiden-2",
-      frontRight: "meiden-7",
-      backLeft: "meiden-5",
-      backCenter: "meiden-3",
-      backRight: "meiden-4",
+    opponent: {
+      teamName: "駿台",
+      players: [
+        { name: "小布施\nMB\nJF", number: "1" },
+        { name: "今淵\nMB\nJF", number: "2" },
+        { name: "落合\nOH\nJ", number: "3" },
+        { name: "畠\nOP\nJ(左)", number: "4" },
+        { name: "竹内 祐\nOH\nJ", number: "5" },
+        { name: "イ\nS\nJF", number: "6" },
+        { name: "井上\nL", number: "7" },
+        { name: "竹内 颯\nS,OH\nHB", number: "8" },
+        { name: "前田\nOH\nJ", number: "9" },
+        { name: "清野\nS\nJF", number: "10" },
+        { name: "野中\nMB\nJF", number: "11" },
+        { name: "", number: "" },
+      ],
+      selected: ["opponent-3", "opponent-0", "opponent-4", "opponent-2", "opponent-10", "opponent-5"],
+      aces: ["opponent-4"],
+      blockers: ["opponent-0"],
+      setter: "opponent-5",
+      keyRote: "",
+      court: {
+        backLeft: "opponent-3",
+        backCenter: "opponent-0",
+        backRight: "opponent-4",
+        frontLeft: "opponent-2",
+        frontCenter: "opponent-10",
+        frontRight: "opponent-5",
+      },
     },
   },
 };
+const DEFAULT_SETUP = DEFAULT_DATA.teams;
+const defaultOpponentPlayers = DEFAULT_SETUP.opponent.players;
+const roster = DEFAULT_SETUP.meiden.players;
 const state = {
   selectedOpponent: new Set(DEFAULT_SETUP.opponent.selected),
   selectedMeiden: new Set(DEFAULT_SETUP.meiden.selected),
@@ -87,7 +93,7 @@ const state = {
   rotationProgressInitialized: false,
   meidenOffset: 0,
   opponentOffset: 0,
-  serveMarkerSide: "meiden",
+  serveMarkerSide: DEFAULT_DATA.serveStart,
   serveStep: 0,
   setupPersistenceReady: false,
   manualCourtInput: {
@@ -98,8 +104,8 @@ const state = {
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
-const ROTATION_PROGRESS_KEY = "rotationBoardProgressV1";
-const SETUP_STATE_KEY = "rotationBoardSetupV1";
+const ROTATION_PROGRESS_KEY = "rotationBoardProgressV2";
+const SETUP_STATE_KEY = "rotationBoardSetupV2";
 const MAX_NAME_LINES = 3;
 
 function normalizeOffset(value) {
@@ -486,6 +492,14 @@ function setTeamName(team, value) {
   label.textContent = value || (team === "opponent" ? "AWAY TEAM" : "HOME TEAM");
 }
 
+function setDefaultServeStart() {
+  const serveStart = DEFAULT_DATA.serveStart === "meiden" ? "meiden" : "opponent";
+  const serveRadio = $(`input[name="serveStart"][value="${serveStart}"]`);
+  if (serveRadio) serveRadio.checked = true;
+  state.serveMarkerSide = serveStart;
+  state.serveStep = 0;
+}
+
 function setTeamInputs(team, players) {
   const selector = team === "opponent" ? "#opponentInputs .role-player-card" : "#meidenRoster .role-player-card";
   $$(selector).forEach((card, index) => {
@@ -505,13 +519,17 @@ function setDefaultRoles(team) {
     state.opponentAces = new Set(defaults.aces);
     state.opponentBlockers = new Set(defaults.blockers);
     state.opponentSetter = defaults.setter;
+    state.opponentKeyRote = defaults.keyRote || "";
     state.opponentOffset = 0;
+    $("#opponentKeyRote").value = state.opponentKeyRote;
   } else {
     state.selectedMeiden = new Set(defaults.selected);
     state.meidenAces = new Set(defaults.aces);
     state.meidenBlockers = new Set(defaults.blockers);
     state.meidenSetter = defaults.setter;
+    state.meidenKeyRote = defaults.keyRote || "";
     state.meidenOffset = 0;
+    $("#meidenKeyRote").value = state.meidenKeyRote;
   }
 }
 
@@ -950,17 +968,9 @@ function resetTeamSetup(team) {
   const teamLabel = isOpponent ? "AWAY TEAM" : "HOME TEAM";
   if (!window.confirm(`${teamLabel}の入力内容をリセットしますか？`)) return;
 
-  setTeamName(team, "");
-  setTeamInputs(team, []);
-  clearTeamRoles(team);
   clearRotationProgress();
-  state.manualCourtInput[team] = true;
-  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
-  if (team === "opponent") refreshOpponentSelects();
-  else refreshMeidenSelects();
-  clearStartRotation(team);
-  $("#setupError").textContent = "";
-  $("#rotationCards").innerHTML = "";
+  setDefaultServeStart();
+  applyTeamDefaults(team);
   saveSetupState();
 }
 
@@ -1299,6 +1309,7 @@ function init() {
   buildRoster();
   applyTeamDefaults("opponent");
   applyTeamDefaults("meiden");
+  setDefaultServeStart();
   restoreSetupState();
   restoreRotationProgress();
   state.setupPersistenceReady = true;
