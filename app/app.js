@@ -964,10 +964,11 @@ function resetStartRotation(team) {
 }
 
 function resetTeamSetup(team) {
-  const isOpponent = team === "opponent";
-  const teamLabel = isOpponent ? "AWAY TEAM" : "HOME TEAM";
-  if (!window.confirm(`${teamLabel}の入力内容をリセットしますか？`)) return;
-
+  try {
+    localStorage.removeItem(SETUP_STATE_KEY);
+  } catch {
+    // localStorage may be unavailable in private browsing or restricted embeds.
+  }
   clearRotationProgress();
   setDefaultServeStart();
   applyTeamDefaults(team);
