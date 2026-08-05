@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rotation Board Ver1</title>
-    <link rel="stylesheet" href="./styles.css?v=20260805-01" />
+    <link rel="stylesheet" href="./styles.css?v=20260805-02" />
   </head>
   <body>
     <div class="app-shell">
@@ -73,12 +73,12 @@
                   <span>HOME TEAM</span>
                   <input id="homeTeamName" class="text-input" type="text" value="名電" placeholder="HOME TEAM" />
                 </label>
-                <button id="resetHomeSetup" class="setup-reset-button team-reset-button" type="button">HOME RESET</button>
+                <button id="resetHomeSetup" class="setup-reset-button team-reset-button" type="button" data-reset-team="meiden">HOME RESET</button>
                 <label>
                   <span>AWAY TEAM</span>
                   <input id="opponentTeamName" class="text-input" type="text" value="星城" placeholder="AWAY TEAM" />
                 </label>
-                <button id="resetAwaySetup" class="setup-reset-button team-reset-button" type="button">AWAY RESET</button>
+                <button id="resetAwaySetup" class="setup-reset-button team-reset-button" type="button" data-reset-team="opponent">AWAY RESET</button>
               </div>
             </section>
 
@@ -88,7 +88,7 @@
                   <span>HOME TEAM</span>
                   <input id="mobileHomeTeamName" class="text-input" type="text" value="名電" placeholder="HOME TEAM" />
                 </label>
-                <button id="mobileResetHomeSetup" class="setup-reset-button team-reset-button" type="button">HOME RESET</button>
+                <button id="mobileResetHomeSetup" class="setup-reset-button team-reset-button" type="button" data-reset-team="meiden">HOME RESET</button>
               </div>
               <div class="panel-header">
                 <h3>HOME TEAM</h3>
@@ -142,7 +142,7 @@
                   <span>AWAY TEAM</span>
                   <input id="mobileOpponentTeamName" class="text-input" type="text" value="星城" placeholder="AWAY TEAM" />
                 </label>
-                <button id="mobileResetAwaySetup" class="setup-reset-button team-reset-button" type="button">AWAY RESET</button>
+                <button id="mobileResetAwaySetup" class="setup-reset-button team-reset-button" type="button" data-reset-team="opponent">AWAY RESET</button>
               </div>
               <div class="panel-header">
                 <h3>AWAY TEAM</h3>
@@ -266,6 +266,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260805-01"></script>
+    <script src="./app.js?v=20260805-02"></script>
   </body>
 </html>

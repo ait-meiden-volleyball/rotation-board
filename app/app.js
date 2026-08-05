@@ -106,6 +106,8 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const ROTATION_PROGRESS_KEY = "rotationBoardProgressV2";
 const SETUP_STATE_KEY = "rotationBoardSetupV2";
+const LEGACY_ROTATION_PROGRESS_KEYS = ["rotationBoardProgressV1"];
+const LEGACY_SETUP_STATE_KEYS = ["rotationBoardSetupV1"];
 const MAX_NAME_LINES = 3;
 
 function normalizeOffset(value) {
@@ -131,6 +133,14 @@ function saveRotationProgress() {
         rotationProgressInitialized: state.rotationProgressInitialized,
       }),
     );
+  } catch {
+    // localStorage may be unavailable in private browsing or restricted embeds.
+  }
+}
+
+function removeStoredKeys(keys) {
+  try {
+    keys.forEach((key) => localStorage.removeItem(key));
   } catch {
     // localStorage may be unavailable in private browsing or restricted embeds.
   }
@@ -168,11 +178,7 @@ function clearRotationProgress() {
   state.opponentOffset = 0;
   state.serveMarkerSide = $("input[name='serveStart']:checked")?.value || "meiden";
   state.serveStep = 0;
-  try {
-    localStorage.removeItem(ROTATION_PROGRESS_KEY);
-  } catch {
-    // localStorage may be unavailable in private browsing or restricted embeds.
-  }
+  removeStoredKeys([ROTATION_PROGRESS_KEY, ...LEGACY_ROTATION_PROGRESS_KEYS]);
 }
 
 function initializeRotationProgress(serveTeam) {
@@ -964,11 +970,7 @@ function resetStartRotation(team) {
 }
 
 function resetTeamSetup(team) {
-  try {
-    localStorage.removeItem(SETUP_STATE_KEY);
-  } catch {
-    // localStorage may be unavailable in private browsing or restricted embeds.
-  }
+  removeStoredKeys([SETUP_STATE_KEY, ...LEGACY_SETUP_STATE_KEYS]);
   clearRotationProgress();
   setDefaultServeStart();
   applyTeamDefaults(team);
@@ -1238,10 +1240,12 @@ function bindEvents() {
   $("#mobileTabAnalysis")?.addEventListener("click", () => {
     startAnalysis();
   });
-  $("#resetHomeSetup").addEventListener("click", () => resetTeamSetup("meiden"));
-  $("#resetAwaySetup").addEventListener("click", () => resetTeamSetup("opponent"));
-  $("#mobileResetHomeSetup")?.addEventListener("click", () => resetTeamSetup("meiden"));
-  $("#mobileResetAwaySetup")?.addEventListener("click", () => resetTeamSetup("opponent"));
+  document.addEventListener("click", (event) => {
+    const resetButton = event.target.closest("[data-reset-team]");
+    if (!resetButton) return;
+    event.preventDefault();
+    resetTeamSetup(resetButton.dataset.resetTeam);
+  });
   $("#resetOpponentRotation").addEventListener("click", () => resetStartRotation("opponent"));
   $("#resetMeidenRotation").addEventListener("click", () => resetStartRotation("meiden"));
   $("#aceDropdown").addEventListener("click", () => toggleMultiSelect("acePicker"));
