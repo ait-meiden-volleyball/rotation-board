@@ -1712,20 +1712,23 @@ body.analysis-mode .screen.active {
   .setup-grid {
     grid-template-areas:
       "home"
-      "homeRotation"
       "away"
-      "awayRotation"
-      "serve";
+      "rotation";
   }
 
-  .rotation-panel,
+  .rotation-panel {
+    display: block;
+    grid-area: rotation;
+  }
+
   .court-setup {
-    display: contents;
+    display: grid;
+    gap: 8px;
+    padding: 12px;
   }
 
-  .rotation-panel > .panel-header,
   .setup-net {
-    display: none;
+    display: flex;
   }
 
   .home-rotation-side,
@@ -1738,12 +1741,10 @@ body.analysis-mode .screen.active {
   }
 
   .home-rotation-side {
-    grid-area: homeRotation;
     padding: 16px;
   }
 
   .away-rotation-side {
-    grid-area: awayRotation;
     padding: 16px;
   }
 

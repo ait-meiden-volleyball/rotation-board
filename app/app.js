@@ -970,15 +970,19 @@ function resetStartRotation(team) {
 }
 
 function resetTeamSetup(team) {
+  const targetTeam = team === "opponent" ? "opponent" : "meiden";
+  const wasReady = state.setupPersistenceReady;
+  state.setupPersistenceReady = false;
   removeStoredKeys([SETUP_STATE_KEY, ...LEGACY_SETUP_STATE_KEYS]);
   clearRotationProgress();
   setDefaultServeStart();
-  applyTeamDefaults(team);
+  applyTeamDefaults(targetTeam);
+  state.setupPersistenceReady = wasReady;
   saveSetupState();
 }
 
-window.resetTeamSetup = resetTeamSetup;
-window.resetStartRotation = resetStartRotation;
+globalThis.resetTeamSetup = resetTeamSetup;
+globalThis.resetStartRotation = resetStartRotation;
 
 function readCourt(team) {
   const court = {};
@@ -1242,6 +1246,22 @@ function bindEvents() {
   $("#mobileTabSetup")?.addEventListener("click", () => switchScreen("setup"));
   $("#mobileTabAnalysis")?.addEventListener("click", () => {
     startAnalysis();
+  });
+  [
+    ["#resetHomeSetup", "meiden"],
+    ["#mobileResetHomeSetup", "meiden"],
+    ["#resetAwaySetup", "opponent"],
+    ["#mobileResetAwaySetup", "opponent"],
+  ].forEach(([selector, team]) => {
+    $(selector)?.addEventListener(
+      "click",
+      (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        resetTeamSetup(team);
+      },
+      true,
+    );
   });
   document.addEventListener("click", (event) => {
     const resetButton = event.target.closest("[data-reset-team]");
