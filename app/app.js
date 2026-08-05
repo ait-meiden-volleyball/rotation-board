@@ -977,6 +977,9 @@ function resetTeamSetup(team) {
   saveSetupState();
 }
 
+window.resetTeamSetup = resetTeamSetup;
+window.resetStartRotation = resetStartRotation;
+
 function readCourt(team) {
   const court = {};
   $$(`select[data-team="${team}"]`).forEach((select) => {
