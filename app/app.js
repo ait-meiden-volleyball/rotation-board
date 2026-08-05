@@ -973,10 +973,18 @@ function resetTeamSetup(team) {
   const targetTeam = team === "opponent" ? "opponent" : "meiden";
   const wasReady = state.setupPersistenceReady;
   state.setupPersistenceReady = false;
-  removeStoredKeys([SETUP_STATE_KEY, ...LEGACY_SETUP_STATE_KEYS]);
   clearRotationProgress();
-  setDefaultServeStart();
-  applyTeamDefaults(targetTeam);
+  setTeamName(targetTeam, "");
+  setTeamInputs(targetTeam, []);
+  clearTeamRoles(targetTeam);
+  state.config = null;
+  state.manualCourtInput[targetTeam] = true;
+  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
+  if (targetTeam === "opponent") refreshOpponentSelects();
+  else refreshMeidenSelects();
+  clearStartRotation(targetTeam);
+  $("#setupError").textContent = "";
+  $("#rotationCards").innerHTML = "";
   state.setupPersistenceReady = wasReady;
   saveSetupState();
 }
