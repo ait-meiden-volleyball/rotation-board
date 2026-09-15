@@ -106,6 +106,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const ROTATION_PROGRESS_KEY = "rotationBoardProgressV2";
 const SETUP_STATE_KEY = "rotationBoardSetupV2";
+const TEAM_LIBRARY_KEY = "rotationBoardTeamLibraryV1";
 const LEGACY_ROTATION_PROGRESS_KEYS = ["rotationBoardProgressV1"];
 const LEGACY_SETUP_STATE_KEYS = ["rotationBoardSetupV1"];
 const MAX_NAME_LINES = 3;
@@ -144,6 +145,71 @@ function removeStoredKeys(keys) {
   } catch {
     // localStorage may be unavailable in private browsing or restricted embeds.
   }
+}
+
+function teamPrefix(team) {
+  return team === "opponent" ? "opponent" : "meiden";
+}
+
+function playerIdForIndex(team, index) {
+  return `${teamPrefix(team)}-${index}`;
+}
+
+function playerIndexFromId(value) {
+  const match = String(value || "").match(/-(\d+)$/);
+  if (!match) return null;
+  const index = Number(match[1]);
+  return Number.isInteger(index) && index >= 0 && index < 12 ? index : null;
+}
+
+function idsToIndexes(values) {
+  return values
+    .map(playerIndexFromId)
+    .filter((index) => index !== null);
+}
+
+function indexesToIds(team, indexes) {
+  return (Array.isArray(indexes) ? indexes : [])
+    .filter((index) => Number.isInteger(index) && index >= 0 && index < 12)
+    .map((index) => playerIdForIndex(team, index));
+}
+
+function courtToIndexes(court) {
+  return Object.fromEntries(POSITIONS.map((position) => [position, playerIndexFromId(court?.[position])]));
+}
+
+function courtIndexesToIds(team, court) {
+  return Object.fromEntries(
+    POSITIONS.map((position) => {
+      const index = court?.[position];
+      return [position, Number.isInteger(index) && index >= 0 && index < 12 ? playerIdForIndex(team, index) : ""];
+    }),
+  );
+}
+
+function readTeamLibrary() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TEAM_LIBRARY_KEY) || "null");
+    if (!saved || typeof saved !== "object") return { version: 1, teams: {} };
+    return {
+      version: 1,
+      teams: saved.teams && typeof saved.teams === "object" ? saved.teams : {},
+    };
+  } catch {
+    return { version: 1, teams: {} };
+  }
+}
+
+function writeTeamLibrary(library) {
+  try {
+    localStorage.setItem(TEAM_LIBRARY_KEY, JSON.stringify({ version: 1, teams: library.teams || {} }));
+  } catch {
+    alert("ブラウザ保存に失敗しました。空き容量やプライベートブラウズ設定を確認してください。");
+  }
+}
+
+function savedTeamNames() {
+  return Object.keys(readTeamLibrary().teams).sort((a, b) => a.localeCompare(b, "ja"));
 }
 
 function restoreRotationProgress() {
@@ -516,6 +582,153 @@ function setTeamInputs(team, players) {
     numberInput.value = player.number;
     numberInput.dataset.previousNumber = player.number;
   });
+}
+
+function teamStateFor(team) {
+  if (team === "opponent") {
+    return {
+      selected: state.selectedOpponent,
+      aces: state.opponentAces,
+      blockers: state.opponentBlockers,
+      setter: state.opponentSetter,
+      keyRote: state.opponentKeyRote,
+    };
+  }
+  return {
+    selected: state.selectedMeiden,
+    aces: state.meidenAces,
+    blockers: state.meidenBlockers,
+    setter: state.meidenSetter,
+    keyRote: state.meidenKeyRote,
+  };
+}
+
+function setTeamRoleState(team, snapshot) {
+  const selected = new Set(indexesToIds(team, snapshot.selectedIndexes));
+  const aces = new Set(indexesToIds(team, snapshot.aceIndexes));
+  const blockers = new Set(indexesToIds(team, snapshot.keyPlayerIndexes));
+  const setterIndex = Number.isInteger(snapshot.setterIndex) ? snapshot.setterIndex : null;
+  const setter = setterIndex === null ? "" : playerIdForIndex(team, setterIndex);
+  if (team === "opponent") {
+    state.selectedOpponent = selected;
+    state.opponentAces = aces;
+    state.opponentBlockers = blockers;
+    state.opponentSetter = setter;
+    state.opponentKeyRote = snapshot.keyRote || "";
+    state.opponentOffset = 0;
+    $("#opponentKeyRote").value = state.opponentKeyRote;
+  } else {
+    state.selectedMeiden = selected;
+    state.meidenAces = aces;
+    state.meidenBlockers = blockers;
+    state.meidenSetter = setter;
+    state.meidenKeyRote = snapshot.keyRote || "";
+    state.meidenOffset = 0;
+    $("#meidenKeyRote").value = state.meidenKeyRote;
+  }
+}
+
+function currentTeamSnapshot(team) {
+  const roles = teamStateFor(team);
+  return {
+    version: 1,
+    teamName: (team === "opponent" ? $("#opponentTeamName") : $("#homeTeamName"))?.value.trim() || "",
+    players: teamInputData(team),
+    selectedIndexes: idsToIndexes(Array.from(roles.selected)),
+    aceIndexes: idsToIndexes(Array.from(roles.aces)),
+    keyPlayerIndexes: idsToIndexes(Array.from(roles.blockers)),
+    setterIndex: playerIndexFromId(roles.setter),
+    keyRote: roles.keyRote || "",
+    court: courtToIndexes(courtData(team)),
+    savedAt: new Date().toISOString(),
+  };
+}
+
+function applyTeamSnapshot(team, snapshot) {
+  const targetTeam = team === "opponent" ? "opponent" : "meiden";
+  const wasReady = state.setupPersistenceReady;
+  state.setupPersistenceReady = false;
+  clearRotationProgress();
+  setTeamName(targetTeam, snapshot.teamName || "");
+  setTeamInputs(targetTeam, Array.isArray(snapshot.players) ? snapshot.players : []);
+  setTeamRoleState(targetTeam, snapshot);
+  state.config = null;
+  state.manualCourtInput[targetTeam] = true;
+  $$(".multi-select.open").forEach((element) => element.classList.remove("open"));
+  if (targetTeam === "opponent") refreshOpponentSelects();
+  else refreshMeidenSelects();
+  renderCourtSelects(targetTeam, Object.values(courtIndexesToIds(targetTeam, snapshot.court)), {
+    autofill: false,
+    court: courtIndexesToIds(targetTeam, snapshot.court),
+  });
+  $("#setupError").textContent = "";
+  $("#rotationCards").innerHTML = "";
+  state.setupPersistenceReady = wasReady;
+  saveSetupState();
+}
+
+function updateTeamLibraryControls() {
+  const names = savedTeamNames();
+  [
+    ["#meidenTeamLibrarySelect", "HOME saved teams"],
+    ["#opponentTeamLibrarySelect", "AWAY saved teams"],
+  ].forEach(([selector, label]) => {
+    const select = $(selector);
+    if (!select) return;
+    const previous = select.value;
+    select.innerHTML = "";
+    select.append(createOption("", label));
+    names.forEach((name) => select.append(createOption(name, name)));
+    if (names.includes(previous)) select.value = previous;
+  });
+}
+
+function saveTeamToLibrary(team) {
+  const snapshot = currentTeamSnapshot(team);
+  const name = snapshot.teamName;
+  if (!name) {
+    alert("チーム名を入力してから保存してください。");
+    return;
+  }
+  const library = readTeamLibrary();
+  if (library.teams[name] && !confirm(`${name} は保存済みです。上書きしますか？`)) return;
+  library.teams[name] = snapshot;
+  writeTeamLibrary(library);
+  updateTeamLibraryControls();
+  const select = team === "opponent" ? $("#opponentTeamLibrarySelect") : $("#meidenTeamLibrarySelect");
+  if (select) select.value = name;
+}
+
+function loadTeamFromLibrary(team) {
+  const select = team === "opponent" ? $("#opponentTeamLibrarySelect") : $("#meidenTeamLibrarySelect");
+  const name = select?.value || "";
+  if (!name) {
+    alert("呼び出すチームを選択してください。");
+    return;
+  }
+  const snapshot = readTeamLibrary().teams[name];
+  if (!snapshot) {
+    alert("保存済みチームが見つかりません。");
+    updateTeamLibraryControls();
+    return;
+  }
+  applyTeamSnapshot(team, snapshot);
+  updateTeamLibraryControls();
+  if (select) select.value = name;
+}
+
+function deleteTeamFromLibrary(team) {
+  const select = team === "opponent" ? $("#opponentTeamLibrarySelect") : $("#meidenTeamLibrarySelect");
+  const name = select?.value || "";
+  if (!name) {
+    alert("削除するチームを選択してください。");
+    return;
+  }
+  if (!confirm(`${name} の保存データを削除しますか？`)) return;
+  const library = readTeamLibrary();
+  delete library.teams[name];
+  writeTeamLibrary(library);
+  updateTeamLibraryControls();
 }
 
 function setDefaultRoles(team) {
@@ -1279,6 +1492,12 @@ function bindEvents() {
   });
   $("#resetOpponentRotation").addEventListener("click", () => resetStartRotation("opponent"));
   $("#resetMeidenRotation").addEventListener("click", () => resetStartRotation("meiden"));
+  $("#saveMeidenTeam").addEventListener("click", () => saveTeamToLibrary("meiden"));
+  $("#loadMeidenTeam").addEventListener("click", () => loadTeamFromLibrary("meiden"));
+  $("#deleteMeidenTeam").addEventListener("click", () => deleteTeamFromLibrary("meiden"));
+  $("#saveOpponentTeam").addEventListener("click", () => saveTeamToLibrary("opponent"));
+  $("#loadOpponentTeam").addEventListener("click", () => loadTeamFromLibrary("opponent"));
+  $("#deleteOpponentTeam").addEventListener("click", () => deleteTeamFromLibrary("opponent"));
   $("#aceDropdown").addEventListener("click", () => toggleMultiSelect("acePicker"));
   $("#blockerDropdown").addEventListener("click", () => toggleMultiSelect("blockerPicker"));
   $("#meidenAceDropdown").addEventListener("click", () => toggleMultiSelect("meidenAcePicker"));
@@ -1348,6 +1567,7 @@ function init() {
   setDefaultServeStart();
   restoreSetupState();
   restoreRotationProgress();
+  updateTeamLibraryControls();
   state.setupPersistenceReady = true;
   bindEvents();
 }
