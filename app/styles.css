@@ -447,16 +447,6 @@ body.analysis-mode .screen.active {
   padding: 16px;
 }
 
-body:not(.analysis-mode) .panel {
-  border-color: rgba(215, 184, 107, 0.34);
-  background:
-    linear-gradient(135deg, rgba(255, 236, 173, 0.12), rgba(70, 48, 15, 0.22) 42%, rgba(var(--panel-rgb), 0.96) 76%),
-    rgba(var(--panel-rgb), 0.96);
-  box-shadow:
-    0 20px 48px rgba(0, 3, 16, 0.42),
-    inset 0 1px 0 rgba(255, 237, 178, 0.08);
-}
-
 .compact-team-panel {
   padding: 10px 12px;
 }
@@ -605,13 +595,6 @@ body:not(.analysis-mode) .panel {
   background:
     radial-gradient(circle at 12% 0%, rgba(var(--purple-soft-rgb), 0.24), transparent 58%),
     linear-gradient(180deg, rgba(var(--purple-rgb), 0.74), rgba(var(--purple-card-rgb), 0.92));
-}
-
-body:not(.analysis-mode) .role-player-card.is-normal {
-  border-color: rgba(215, 184, 107, 0.58);
-  background:
-    radial-gradient(circle at 12% 0%, rgba(255, 245, 196, 0.32), transparent 58%),
-    linear-gradient(180deg, rgba(196, 151, 48, 0.76), rgba(80, 57, 16, 0.88));
 }
 
 .role-player-card.is-starter {
