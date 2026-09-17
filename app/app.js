@@ -1184,6 +1184,8 @@ function resetStartRotation(team) {
 
 function resetTeamSetup(team) {
   const targetTeam = team === "opponent" ? "opponent" : "meiden";
+  const label = targetTeam === "opponent" ? "AWAY TEAM" : "HOME TEAM";
+  if (!window.confirm(`${label}の入力内容をすべてリセットしますか？`)) return;
   const wasReady = state.setupPersistenceReady;
   state.setupPersistenceReady = false;
   clearRotationProgress();
