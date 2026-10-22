@@ -951,6 +951,19 @@ body.analysis-mode .screen.active {
   filter: brightness(1.08);
 }
 
+.library-backup-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.library-backup-controls button {
+  min-height: 28px;
+  padding: 0 9px;
+  font-size: 0.66rem;
+}
+
 .setup-reset-button {
   min-height: 38px;
   padding: 0 18px;

@@ -112,6 +112,11 @@
                 <button id="saveMeidenTeam" type="button">SAVE</button>
                 <button id="loadMeidenTeam" type="button">LOAD</button>
                 <button id="deleteMeidenTeam" type="button">DELETE</button>
+                <div class="library-backup-controls" aria-label="TEAM LIBRARY backup">
+                  <button id="exportTeamLibrary" type="button">BACKUP</button>
+                  <button id="importTeamLibrary" type="button">RESTORE</button>
+                  <input id="teamLibraryImportFile" type="file" accept="application/json,.json" hidden />
+                </div>
               </div>
               <div class="roster-grid" id="meidenRoster"></div>
               <div class="role-settings home-role-settings">
@@ -280,6 +285,6 @@
       </main>
     </div>
 
-    <script src="./app.js?v=20260915-02"></script>
+    <script src="./app.js?v=20261022-01"></script>
   </body>
 </html>

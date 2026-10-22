@@ -107,6 +107,7 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const ROTATION_PROGRESS_KEY = "rotationBoardProgressV2";
 const SETUP_STATE_KEY = "rotationBoardSetupV2";
 const TEAM_LIBRARY_KEY = "rotationBoardTeamLibraryV1";
+const LAST_SESSION_KEY = "rotationBoardLastSessionV1";
 const LEGACY_ROTATION_PROGRESS_KEYS = ["rotationBoardProgressV1"];
 const LEGACY_SETUP_STATE_KEYS = ["rotationBoardSetupV1"];
 const MAX_NAME_LINES = 3;
@@ -124,19 +125,11 @@ function signedOffset(value) {
 
 function saveRotationProgress() {
   try {
-    localStorage.setItem(
-      ROTATION_PROGRESS_KEY,
-      JSON.stringify({
-        homeRotationOffset: state.meidenOffset,
-        awayRotationOffset: state.opponentOffset,
-        serveTeam: state.serveMarkerSide,
-        serveStep: state.serveStep,
-        rotationProgressInitialized: state.rotationProgressInitialized,
-      }),
-    );
+    localStorage.setItem(ROTATION_PROGRESS_KEY, JSON.stringify(currentRotationProgressSnapshot()));
   } catch {
     // localStorage may be unavailable in private browsing or restricted embeds.
   }
+  saveLastSession();
 }
 
 function removeStoredKeys(keys) {
@@ -203,8 +196,10 @@ function readTeamLibrary() {
 function writeTeamLibrary(library) {
   try {
     localStorage.setItem(TEAM_LIBRARY_KEY, JSON.stringify({ version: 1, teams: library.teams || {} }));
+    return true;
   } catch {
     alert("ブラウザ保存に失敗しました。空き容量やプライベートブラウズ設定を確認してください。");
+    return false;
   }
 }
 
@@ -212,9 +207,111 @@ function savedTeamNames() {
   return Object.keys(readTeamLibrary().teams).sort((a, b) => a.localeCompare(b, "ja"));
 }
 
+function readStoredJson(keys, isValid = (value) => value && typeof value === "object") {
+  try {
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      if (isValid(parsed)) return parsed;
+    }
+  } catch {
+    // localStorage may be unavailable in private browsing or contain corrupt data.
+  }
+  return null;
+}
+
+function readLastSession() {
+  const session = readStoredJson([LAST_SESSION_KEY]);
+  if (!session || session.version !== 1) return null;
+  return session;
+}
+
+function isSetupState(value) {
+  return Boolean(value && typeof value === "object" && value.players && typeof value.players === "object");
+}
+
+function isRotationProgressState(value) {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      (Number.isFinite(value.homeRotationOffset ?? value.meidenOffset) ||
+        Number.isFinite(value.awayRotationOffset ?? value.opponentOffset) ||
+        value.serveTeam === "meiden" ||
+        value.serveTeam === "opponent" ||
+        value.serveMarkerSide === "meiden" ||
+        value.serveMarkerSide === "opponent" ||
+        Number.isFinite(value.serveStep)),
+  );
+}
+
+function currentRotationProgressSnapshot() {
+  return {
+    homeRotationOffset: state.meidenOffset,
+    awayRotationOffset: state.opponentOffset,
+    serveTeam: state.serveMarkerSide,
+    serveStep: state.serveStep,
+    rotationProgressInitialized: state.rotationProgressInitialized,
+  };
+}
+
+function currentSetupSnapshot() {
+  return {
+    version: 2,
+    savedAt: new Date().toISOString(),
+    teamNames: {
+      meiden: $("#homeTeamName")?.value || "",
+      opponent: $("#opponentTeamName")?.value || "",
+    },
+    players: {
+      meiden: teamInputData("meiden"),
+      opponent: teamInputData("opponent"),
+    },
+    selected: {
+      meiden: Array.from(state.selectedMeiden),
+      opponent: Array.from(state.selectedOpponent),
+    },
+    roles: {
+      meidenAces: Array.from(state.meidenAces),
+      meidenBlockers: Array.from(state.meidenBlockers),
+      opponentAces: Array.from(state.opponentAces),
+      opponentBlockers: Array.from(state.opponentBlockers),
+      meidenSetter: state.meidenSetter,
+      opponentSetter: state.opponentSetter,
+      meidenKeyRote: state.meidenKeyRote,
+      opponentKeyRote: state.opponentKeyRote,
+    },
+    court: {
+      meiden: courtData("meiden"),
+      opponent: courtData("opponent"),
+    },
+    serveStart: $("input[name='serveStart']:checked")?.value || "opponent",
+  };
+}
+
+function saveLastSession() {
+  if (!state.setupPersistenceReady) return;
+  try {
+    localStorage.setItem(
+      LAST_SESSION_KEY,
+      JSON.stringify({
+        version: 1,
+        savedAt: new Date().toISOString(),
+        setup: currentSetupSnapshot(),
+        progress: currentRotationProgressSnapshot(),
+      }),
+    );
+  } catch {
+    // In Safari private browsing, data can remain available only for the current session.
+  }
+}
+
 function restoreRotationProgress() {
   try {
-    const saved = JSON.parse(localStorage.getItem(ROTATION_PROGRESS_KEY) || "null");
+    const sessionProgress = readLastSession()?.progress;
+    const saved = isRotationProgressState(sessionProgress)
+      ? sessionProgress
+      : readStoredJson([ROTATION_PROGRESS_KEY, ...LEGACY_ROTATION_PROGRESS_KEYS], isRotationProgressState);
     if (!saved || typeof saved !== "object") return;
     const homeOffset = saved.homeRotationOffset ?? saved.meidenOffset;
     const awayOffset = saved.awayRotationOffset ?? saved.opponentOffset;
@@ -232,9 +329,11 @@ function restoreRotationProgress() {
     }
     if (Number.isFinite(saved.serveStep)) state.serveStep = saved.serveStep;
     state.rotationProgressInitialized = Boolean(saved.rotationProgressInitialized ?? saved.hasStartedAnalysis ?? hasSavedProgress);
+    return true;
   } catch {
     // Ignore corrupt saved progress and continue with defaults.
   }
+  return false;
 }
 
 function clearRotationProgress() {
@@ -245,6 +344,7 @@ function clearRotationProgress() {
   state.serveMarkerSide = $("input[name='serveStart']:checked")?.value || "meiden";
   state.serveStep = 0;
   removeStoredKeys([ROTATION_PROGRESS_KEY, ...LEGACY_ROTATION_PROGRESS_KEYS]);
+  saveLastSession();
 }
 
 function initializeRotationProgress(serveTeam) {
@@ -380,47 +480,18 @@ function courtData(team) {
 function saveSetupState() {
   if (!state.setupPersistenceReady) return;
   try {
-    localStorage.setItem(
-      SETUP_STATE_KEY,
-      JSON.stringify({
-        teamNames: {
-          meiden: $("#homeTeamName")?.value || "",
-          opponent: $("#opponentTeamName")?.value || "",
-        },
-        players: {
-          meiden: teamInputData("meiden"),
-          opponent: teamInputData("opponent"),
-        },
-        selected: {
-          meiden: Array.from(state.selectedMeiden),
-          opponent: Array.from(state.selectedOpponent),
-        },
-        roles: {
-          meidenAces: Array.from(state.meidenAces),
-          meidenBlockers: Array.from(state.meidenBlockers),
-          opponentAces: Array.from(state.opponentAces),
-          opponentBlockers: Array.from(state.opponentBlockers),
-          meidenSetter: state.meidenSetter,
-          opponentSetter: state.opponentSetter,
-          meidenKeyRote: state.meidenKeyRote,
-          opponentKeyRote: state.opponentKeyRote,
-        },
-        court: {
-          meiden: courtData("meiden"),
-          opponent: courtData("opponent"),
-        },
-        serveStart: $("input[name='serveStart']:checked")?.value || "opponent",
-      }),
-    );
+    localStorage.setItem(SETUP_STATE_KEY, JSON.stringify(currentSetupSnapshot()));
   } catch {
     // localStorage may be unavailable in private browsing or restricted embeds.
   }
+  saveLastSession();
 }
 
 function restoreSetupState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(SETUP_STATE_KEY) || "null");
-    if (!saved || typeof saved !== "object") return;
+    const sessionSetup = readLastSession()?.setup;
+    const saved = isSetupState(sessionSetup) ? sessionSetup : readStoredJson([SETUP_STATE_KEY, ...LEGACY_SETUP_STATE_KEYS], isSetupState);
+    if (!saved || typeof saved !== "object") return false;
 
     setTeamName("meiden", saved.teamNames?.meiden || "");
     setTeamName("opponent", saved.teamNames?.opponent || "");
@@ -452,9 +523,11 @@ function restoreSetupState() {
     renderRoleSelects();
     updateRoleCards("opponent");
     updateRoleCards("meiden");
+    return true;
   } catch {
     // Ignore corrupt saved setup state and continue with defaults.
   }
+  return false;
 }
 
 function startRotationLabel(value) {
@@ -729,6 +802,67 @@ function deleteTeamFromLibrary(team) {
   delete library.teams[name];
   writeTeamLibrary(library);
   updateTeamLibraryControls();
+}
+
+function downloadTeamLibraryBackup() {
+  const payload = {
+    format: "rotation-board-team-library",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    teamLibrary: readTeamLibrary(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `rotation-board-team-library-${date}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function importedLibraryFromBackup(value) {
+  if (!value || typeof value !== "object") return null;
+  const library = value.teamLibrary || value;
+  if (!library.teams || typeof library.teams !== "object" || Array.isArray(library.teams)) return null;
+  return {
+    version: 1,
+    teams: Object.fromEntries(Object.entries(library.teams).filter(([name, snapshot]) => name && snapshot && typeof snapshot === "object")),
+  };
+}
+
+async function importTeamLibraryBackup(file) {
+  if (!file) return;
+  try {
+    const imported = importedLibraryFromBackup(JSON.parse(await file.text()));
+    if (!imported) throw new Error("invalid backup");
+
+    const current = readTeamLibrary();
+    const entries = Object.entries(imported.teams);
+    if (!entries.length) {
+      alert("読み込めるチームデータがありません。");
+      return;
+    }
+
+    const duplicates = entries.filter(([name]) => current.teams[name]);
+    const overwriteDuplicates =
+      !duplicates.length || window.confirm(`${duplicates.length}件の同名チームがあります。保存済みデータを上書きしますか？\nキャンセルの場合は既存データを残し、新しいチームだけを追加します。`);
+    let added = 0;
+    let overwritten = 0;
+    entries.forEach(([name, snapshot]) => {
+      if (current.teams[name] && !overwriteDuplicates) return;
+      if (current.teams[name]) overwritten += 1;
+      else added += 1;
+      current.teams[name] = snapshot;
+    });
+    if (!writeTeamLibrary(current)) return;
+    updateTeamLibraryControls();
+    alert(`TEAM LIBRARYを読み込みました。追加: ${added}件 / 上書き: ${overwritten}件`);
+  } catch {
+    alert("バックアップファイルを読み込めませんでした。ROTATION BOARDのJSONファイルを選択してください。");
+  }
 }
 
 function setDefaultRoles(team) {
@@ -1500,6 +1634,12 @@ function bindEvents() {
   $("#saveOpponentTeam").addEventListener("click", () => saveTeamToLibrary("opponent"));
   $("#loadOpponentTeam").addEventListener("click", () => loadTeamFromLibrary("opponent"));
   $("#deleteOpponentTeam").addEventListener("click", () => deleteTeamFromLibrary("opponent"));
+  $("#exportTeamLibrary").addEventListener("click", downloadTeamLibraryBackup);
+  $("#importTeamLibrary").addEventListener("click", () => $("#teamLibraryImportFile").click());
+  $("#teamLibraryImportFile").addEventListener("change", async (event) => {
+    await importTeamLibraryBackup(event.target.files?.[0]);
+    event.target.value = "";
+  });
   $("#aceDropdown").addEventListener("click", () => toggleMultiSelect("acePicker"));
   $("#blockerDropdown").addEventListener("click", () => toggleMultiSelect("blockerPicker"));
   $("#meidenAceDropdown").addEventListener("click", () => toggleMultiSelect("meidenAcePicker"));
@@ -1564,14 +1704,22 @@ function bindEvents() {
 function init() {
   buildOpponentInputs();
   buildRoster();
-  applyTeamDefaults("opponent");
-  applyTeamDefaults("meiden");
-  setDefaultServeStart();
-  restoreSetupState();
-  restoreRotationProgress();
+  const restoredSetup = restoreSetupState();
+  if (!restoredSetup) {
+    applyTeamDefaults("opponent");
+    applyTeamDefaults("meiden");
+    setDefaultServeStart();
+  }
+  const restoredProgress = restoreRotationProgress();
+  if (!restoredProgress) {
+    state.serveMarkerSide = $("input[name='serveStart']:checked")?.value || DEFAULT_DATA.serveStart;
+    state.serveStep = 0;
+  }
   updateTeamLibraryControls();
   state.setupPersistenceReady = true;
+  saveLastSession();
   bindEvents();
+  window.addEventListener("pagehide", saveLastSession);
 }
 
 init();
